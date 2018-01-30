@@ -183,8 +183,8 @@ def generate_samples(netG):
 
 netG = Generator()
 netD = Discriminator()
-print netG
-print netD
+print(netG)
+print(netD)
 
 if use_cuda:
     netD = netD.cuda(gpu)
@@ -207,7 +207,7 @@ data = inf_train_gen()
 true_char_ngram_lms = [language_helpers.NgramLanguageModel(i+1, lines[10*BATCH_SIZE:], tokenize=False) for i in xrange(4)]
 validation_char_ngram_lms = [language_helpers.NgramLanguageModel(i+1, lines[:10*BATCH_SIZE], tokenize=False) for i in xrange(4)]
 for i in xrange(4):
-    print "validation set JSD for n={}: {}".format(i+1, true_char_ngram_lms[i].js_with(validation_char_ngram_lms[i]))
+    print("validation set JSD for n={}: {}".format(i+1, true_char_ngram_lms[i].js_with(validation_char_ngram_lms[i])))
 true_char_ngram_lms = [language_helpers.NgramLanguageModel(i+1, lines, tokenize=False) for i in xrange(4)]
 
 for iteration in xrange(ITERS):
