@@ -210,6 +210,9 @@ for i in range(4):
     print("validation set JSD for n={}: {}".format(i+1, true_char_ngram_lms[i].js_with(validation_char_ngram_lms[i])))
 true_char_ngram_lms = [language_helpers.NgramLanguageModel(i+1, lines, tokenize=False) for i in range(4)]
 
+if not os.path.exists('/results/lang'):
+    os.makedirs('/results/lang')
+
 for iteration in range(ITERS):
     start_time = time.time()
     ############################

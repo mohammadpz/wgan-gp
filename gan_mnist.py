@@ -170,6 +170,8 @@ if use_cuda:
 
 data = inf_train_gen()
 
+if not os.path.exists('/results/mnist'):
+    os.makedirs('/results/mnist')
 for iteration in range(ITERS):
     start_time = time.time()
     ############################

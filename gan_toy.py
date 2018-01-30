@@ -233,6 +233,8 @@ if use_cuda:
 
 data = inf_train_gen()
 
+if not os.path.exists('/results/' + DATASET):
+    os.makedirs('/results/' + DATASET)
 for iteration in range(ITERS):
     ############################
     # (1) Update D network
