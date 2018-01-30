@@ -275,10 +275,10 @@ for iteration in range(ITERS):
     optimizerG.step()
 
     # Write logs and save samples
-    lib.plot.plot('tmp/lang/time', time.time() - start_time)
-    lib.plot.plot('tmp/lang/train disc cost', D_cost.cpu().data.numpy())
-    lib.plot.plot('tmp/lang/train gen cost', G_cost.cpu().data.numpy())
-    lib.plot.plot('tmp/lang/wasserstein distance', Wasserstein_D.cpu().data.numpy())
+    lib.plot.plot('/results/lang/time', time.time() - start_time)
+    lib.plot.plot('/results/lang/train disc cost', D_cost.cpu().data.numpy())
+    lib.plot.plot('/results/lang/train gen cost', G_cost.cpu().data.numpy())
+    lib.plot.plot('/results/lang/wasserstein distance', Wasserstein_D.cpu().data.numpy())
 
     if iteration % 100 == 99:
         samples = []
@@ -287,9 +287,9 @@ for iteration in range(ITERS):
 
         for i in range(4):
             lm = language_helpers.NgramLanguageModel(i+1, samples, tokenize=False)
-            lib.plot.plot('tmp/lang/js{}'.format(i+1), lm.js_with(true_char_ngram_lms[i]))
+            lib.plot.plot('/results/lang/js{}'.format(i+1), lm.js_with(true_char_ngram_lms[i]))
 
-        with open('tmp/lang/samples_{}.txt'.format(iteration), 'w') as f:
+        with open('/results/lang/samples_{}.txt'.format(iteration), 'w') as f:
             for s in samples:
                 s = "".join(s)
                 f.write(s + "\n")

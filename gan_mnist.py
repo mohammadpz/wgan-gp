@@ -116,7 +116,7 @@ def generate_image(frame, netG):
 
     lib.save_images.save_images(
         samples,
-        'tmp/mnist/samples_{}.png'.format(frame)
+        '/results/mnist/samples_{}.png'.format(frame)
     )
 
 # Dataset iterator
@@ -231,10 +231,10 @@ for iteration in range(ITERS):
     optimizerG.step()
 
     # Write logs and save samples
-    lib.plot.plot('tmp/mnist/time', time.time() - start_time)
-    lib.plot.plot('tmp/mnist/train disc cost', D_cost.cpu().data.numpy())
-    lib.plot.plot('tmp/mnist/train gen cost', G_cost.cpu().data.numpy())
-    lib.plot.plot('tmp/mnist/wasserstein distance', Wasserstein_D.cpu().data.numpy())
+    lib.plot.plot('/results/mnist/time', time.time() - start_time)
+    lib.plot.plot('/results/mnist/train disc cost', D_cost.cpu().data.numpy())
+    lib.plot.plot('/results/mnist/train gen cost', G_cost.cpu().data.numpy())
+    lib.plot.plot('/results/mnist/wasserstein distance', Wasserstein_D.cpu().data.numpy())
 
     # Calculate dev loss and generate samples every 100 iters
     if iteration % 100 == 99:
@@ -248,7 +248,7 @@ for iteration in range(ITERS):
             D = netD(imgs_v)
             _dev_disc_cost = -D.mean().cpu().data.numpy()
             dev_disc_costs.append(_dev_disc_cost)
-        lib.plot.plot('tmp/mnist/dev disc cost', np.mean(dev_disc_costs))
+        lib.plot.plot('/results/mnist/dev disc cost', np.mean(dev_disc_costs))
 
         generate_image(iteration, netG)
 
