@@ -261,7 +261,7 @@ for iteration in range(ITERS):
     # Calculate dev loss and generate samples every 100 iters
     if iteration % 100 == 99:
         dev_disc_costs = []
-        for images, _ in dev_gen():
+        for images in dev_gen():
             images = images.reshape(BATCH_SIZE, 3, 32, 32).transpose(0, 2, 3, 1)
             imgs = torch.stack([preprocess(item) for item in images])
 
