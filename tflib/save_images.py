@@ -25,10 +25,10 @@ def save_images(X, save_path):
         # BCHW -> BHWC
         X = X.transpose(0,2,3,1)
         h, w = X[0].shape[:2]
-        img = np.zeros((h*nh, w*nw, 3))
+        img = np.zeros((int(h*nh), int(w*nw), 3))
     elif X.ndim == 3:
         h, w = X[0].shape[:2]
-        img = np.zeros((h*nh, w*nw))
+        img = np.zeros((int(h*nh), int(w*nw)))
 
     for n, x in enumerate(X):
         j = n/nw
