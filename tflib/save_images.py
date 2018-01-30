@@ -31,8 +31,8 @@ def save_images(X, save_path):
         img = np.zeros((int(h*nh), int(w*nw)))
 
     for n, x in enumerate(X):
-        j = n/nw
-        i = n%nw
-        img[j*h:j*h+h, i*w:i*w+w] = x
+        j = int(n/nw)
+        i = int(n%nw)
+        img[j*int(h):j*int(h)+int(h), i*int(w):i*int(w)+int(w)] = x
 
     imsave(save_path, img)
