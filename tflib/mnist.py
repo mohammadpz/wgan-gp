@@ -47,7 +47,7 @@ def mnist_generator(data, batch_size, n_labelled, limit=None):
     return get_epoch
 
 def load(batch_size, test_batch_size, n_labelled=None):
-    filepath = '/tmp/mnist.pkl.gz'
+    filepath = '/mnt/mnist/mnist.pkl.gz'
     url = 'http://www.iro.umontreal.ca/~lisa/deep/data/mnist/mnist.pkl.gz'
 
     if not os.path.isfile(filepath):
