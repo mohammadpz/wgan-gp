@@ -38,4 +38,4 @@ def flush():
     _since_last_flush.clear()
 
     with open('log.pkl', 'wb') as f:
-        pickle.dump(dict(_since_beginning), f, pickle.HIGHEST_PROTOCOL)
+        pickle.dump(dict(_since_beginning), f)
