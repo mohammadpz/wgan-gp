@@ -21,7 +21,7 @@ from torch import optim
 # Download CIFAR-10 (Python version) at
 # https://www.cs.toronto.edu/~kriz/cifar.html and fill in the path to the
 # extracted files here!
-DATA_DIR = '/data/cifar-10-batches-py/'
+DATA_DIR = '/workspace/data/cifar-10-batches-py/'
 if not os.path.exists(DATA_DIR):
     DATA_DIR = '/u/pezeshki/cifar-10-batches-py'
 if len(DATA_DIR) == 0:
