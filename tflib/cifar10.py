@@ -9,8 +9,7 @@ def unpickle(file):
     fo = open(file, 'rb')
     dict = pickle.load(fo, encoding='bytes')
     fo.close()
-    import ipdb; ipdb.set_trace()
-    return dict['data']
+    return dict[b'data']
 
 def cifar_generator(filenames, batch_size, data_dir):
     all_data = []
