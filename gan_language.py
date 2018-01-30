@@ -26,7 +26,7 @@ if use_cuda:
 # fill in the path to the extracted files here!
 DATA_DIR = '/mnt/one_bilion_extracted/1-billion-word-language-modeling-benchmark-r13output'
 if not os.path.exists(DATA_DIR):
-    DATA_DIR = '/u/pezeshki/1-billion-word-language-modeling-benchmark-r13output'
+    DATA_DIR = '/workspace/data/oneb/1-billion-word-language-modeling-benchmark-r13output'
 if len(DATA_DIR) == 0:
     raise Exception('Please specify path to data directory in gan_language.py!')
 
