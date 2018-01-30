@@ -7,7 +7,7 @@ import tflib.save_images
 import tflib.mnist
 import tflib.cifar10
 import tflib.plot
-import tflib.inception_score
+# import tflib.inception_score
 
 import numpy as np
 
@@ -152,19 +152,19 @@ def generate_image(frame, netG):
     lib.save_images.save_images(samples, './tmp/cifar10/samples_{}.jpg'.format(frame))
 
 # For calculating inception score
-def get_inception_score(G, ):
-    all_samples = []
-    for i in range(10):
-        samples_100 = torch.randn(100, 128)
-        if use_cuda:
-            samples_100 = samples_100.cuda(gpu)
-        samples_100 = autograd.Variable(samples_100, volatile=True)
-        all_samples.append(G(samples_100).cpu().data.numpy())
+# def get_inception_score(G, ):
+#     all_samples = []
+#     for i in range(10):
+#         samples_100 = torch.randn(100, 128)
+#         if use_cuda:
+#             samples_100 = samples_100.cuda(gpu)
+#         samples_100 = autograd.Variable(samples_100, volatile=True)
+#         all_samples.append(G(samples_100).cpu().data.numpy())
 
-    all_samples = np.concatenate(all_samples, axis=0)
-    all_samples = np.multiply(np.add(np.multiply(all_samples, 0.5), 0.5), 255).astype('int32')
-    all_samples = all_samples.reshape((-1, 3, 32, 32)).transpose(0, 2, 3, 1)
-    return lib.inception_score.get_inception_score(list(all_samples))
+#     all_samples = np.concatenate(all_samples, axis=0)
+#     all_samples = np.multiply(np.add(np.multiply(all_samples, 0.5), 0.5), 255).astype('int32')
+#     all_samples = all_samples.reshape((-1, 3, 32, 32)).transpose(0, 2, 3, 1)
+#     return lib.inception_score.get_inception_score(list(all_samples))
 
 # Dataset iterator
 train_gen, dev_gen = lib.cifar10.load(BATCH_SIZE, data_dir=DATA_DIR)
@@ -251,9 +251,9 @@ for iteration in range(ITERS):
     lib.plot.plot('./tmp/cifar10/wasserstein distance', Wasserstein_D.cpu().data.numpy())
 
     # Calculate inception score every 1K iters
-    if False and iteration % 1000 == 999:
-        inception_score = get_inception_score(netG)
-        lib.plot.plot('./tmp/cifar10/inception score', inception_score[0])
+    # if False and iteration % 1000 == 999:
+    #     inception_score = get_inception_score(netG)
+    #     lib.plot.plot('./tmp/cifar10/inception score', inception_score[0])
 
     # Calculate dev loss and generate samples every 100 iters
     if iteration % 100 == 99:
