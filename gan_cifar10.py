@@ -27,6 +27,9 @@ if not os.path.exists(DATA_DIR):
 if len(DATA_DIR) == 0:
     raise Exception('Please specify path to data directory in gan_cifar.py!')
 
+if not os.path.exists('/results/cifar10'):
+    os.makedirs('/results/cifar10')
+
 MODE = 'wgan-gp' # Valid options are dcgan, wgan, or wgan-gp
 DIM = 128 # This overfits substantially; you're probably better off with 64
 LAMBDA = 10 # Gradient penalty lambda hyperparameter
@@ -149,7 +152,7 @@ def generate_image(frame, netG):
     samples = samples.mul(0.5).add(0.5)
     samples = samples.cpu().data.numpy()
 
-    lib.save_images.save_images(samples, './tmp/cifar10/samples_{}.jpg'.format(frame))
+    lib.save_images.save_images(samples, '/results/cifar10/samples_{}.jpg'.format(frame))
 
 # For calculating inception score
 # def get_inception_score(G, ):
@@ -245,15 +248,15 @@ for iteration in range(ITERS):
     optimizerG.step()
 
     # Write logs and save samples
-    lib.plot.plot('./tmp/cifar10/train disc cost', D_cost.cpu().data.numpy())
-    lib.plot.plot('./tmp/cifar10/time', time.time() - start_time)
-    lib.plot.plot('./tmp/cifar10/train gen cost', G_cost.cpu().data.numpy())
-    lib.plot.plot('./tmp/cifar10/wasserstein distance', Wasserstein_D.cpu().data.numpy())
+    lib.plot.plot('/results/cifar10/train disc cost', D_cost.cpu().data.numpy())
+    lib.plot.plot('/results/cifar10/time', time.time() - start_time)
+    lib.plot.plot('/results/cifar10/train gen cost', G_cost.cpu().data.numpy())
+    lib.plot.plot('/results/cifar10/wasserstein distance', Wasserstein_D.cpu().data.numpy())
 
     # Calculate inception score every 1K iters
     # if False and iteration % 1000 == 999:
     #     inception_score = get_inception_score(netG)
-    #     lib.plot.plot('./tmp/cifar10/inception score', inception_score[0])
+    #     lib.plot.plot('/results/cifar10/inception score', inception_score[0])
 
     # Calculate dev loss and generate samples every 100 iters
     if iteration % 100 == 99:
@@ -270,7 +273,7 @@ for iteration in range(ITERS):
             D = netD(imgs_v)
             _dev_disc_cost = -D.mean().cpu().data.numpy()
             dev_disc_costs.append(_dev_disc_cost)
-        lib.plot.plot('./tmp/cifar10/dev disc cost', np.mean(dev_disc_costs))
+        lib.plot.plot('/results/cifar10/dev disc cost', np.mean(dev_disc_costs))
 
         generate_image(iteration, netG)
 
