@@ -22,6 +22,8 @@ from torch import optim
 # https://www.cs.toronto.edu/~kriz/cifar.html and fill in the path to the
 # extracted files here!
 DATA_DIR = '/mnt/cifar10_extracted/cifar-10-batches-py/'
+if not os.path.exists(DATA_DIR):
+    DATA_DIR = '/u/pezeshki/cifar-10-batches-py'
 if len(DATA_DIR) == 0:
     raise Exception('Please specify path to data directory in gan_cifar.py!')
 
