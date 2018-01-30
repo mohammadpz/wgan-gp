@@ -219,7 +219,7 @@ for iteration in range(ITERS):
         p.requires_grad = True  # they are set to False below in netG update
 
     for iter_d in range(CRITIC_ITERS):
-        _data = data.next()
+        _data = data.__next__()
         data_one_hot = one_hot.transform(_data.reshape(-1, 1)).toarray().reshape(BATCH_SIZE, -1, len(charmap))
         #print data_one_hot.shape
         real_data = torch.Tensor(data_one_hot)
