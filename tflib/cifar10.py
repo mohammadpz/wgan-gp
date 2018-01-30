@@ -21,6 +21,8 @@ def cifar_generator(filenames, batch_size, data_dir):
     def get_epoch():
         np.random.shuffle(images)
 
+        print(len(images))
+        print(batch_size)
         for i in range(int(len(images) / batch_size)):
             yield np.copy(images[i*batch_size:(i+1)*batch_size])
 
