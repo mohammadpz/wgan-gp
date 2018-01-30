@@ -22,6 +22,9 @@ use_cuda = torch.cuda.is_available()
 if use_cuda:
     gpu = 0
 
+mode = str(sys.argv[1])
+print(mode)
+
 # Download Google Billion Word at http://www.statmt.org/lm-benchmark/ and
 # fill in the path to the extracted files here!
 DATA_DIR = '/mnt/one_bilion_extracted/1-billion-word-language-modeling-benchmark-r13output'
