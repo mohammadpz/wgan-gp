@@ -306,9 +306,9 @@ for iteration in range(ITERS):
                 g.view(g.size()[0], -1).transpose(0, 1)) ** 2) for g in grads]
 
             if '1' in mode:
-                pen = LAMBDA * sum([n / (d ** 2 + 1e-8) for n, d in zip(noms, denoms)])
-            if '2' in mode:
                 pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads])
+            if '2' in mode:
+                pen = LAMBDA * sum([n / (d ** 2 + 1e-8) for n, d in zip(noms, denoms)])
             pen.backward()
 
         D_cost = D_cost_real + D_cost_fake
@@ -336,6 +336,9 @@ for iteration in range(ITERS):
     lib.plot.plot('/results/lang_' + mode + '/time', time.time() - start_time)
     lib.plot.plot('/results/lang_' + mode + '/train disc cost', D_cost.cpu().data.numpy())
     lib.plot.plot('/results/lang_' + mode + '/train gen cost', G_cost.cpu().data.numpy())
+
+    if iteration % 10 == 0:
+        print(iteration)
 
     if iteration % 100 == 99:
         samples = []
