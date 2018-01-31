@@ -351,14 +351,13 @@ for iteration in range(ITERS):
 
         if mode == 'dwd':
             # grads = autograd.grad(D_cost_real + D_cost_fake, netD.parameters())
-            # pen = sum([torch.sum(g ** 2) for g in grads])
             grads = autograd.grad(
                 outputs=D_cost_real + D_cost_fake,
                 inputs=netD.parameters(),
                 grad_outputs=torch.ones((D_cost_real + D_cost_fake).size()).cuda() if use_cuda else torch.ones(
-                                          (D_cost_real + D_cost_fake).size()),
+                    (D_cost_real + D_cost_fake).size()),
                 create_graph=True, retain_graph=True, only_inputs=True)
-            import ipdb; ipdb.set_trace()
+            pen = sum([torch.sum(g ** 2) for g in grads])
             pen.backward()
 
         optimizerD.step()
