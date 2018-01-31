@@ -244,7 +244,7 @@ for iteration in range(ITERS):
         netD.zero_grad()
 
         if mode == 'reg' or mode == 'gp' or mode == 'dwd':
-            label.resize_(BATCH_SIZE).fill_(1)
+            label.resize_(BATCH_SIZE, 1).fill_(1)
             labelv = autograd.Variable(label)
             output = netD(real_data_v)
             D_cost_real = criterion(output, labelv)
