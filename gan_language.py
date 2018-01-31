@@ -245,7 +245,7 @@ for iteration in range(ITERS):
         real_data_v = autograd.Variable(real_data)
 
         netD.zero_grad()
-
+        t1 = time.time()
         if mode == 'reg' or mode == 'gp' or ('dwd' in mode):
             label.resize_(BATCH_SIZE, 1).fill_(1)
             labelv = autograd.Variable(label)
@@ -333,11 +333,15 @@ for iteration in range(ITERS):
     G_cost = -G
     optimizerG.step()
 
+    t2 = time.time()
+
     # Write logs and save samples
     lib.plot.plot('/results/lang_' + mode + '/time', time.time() - start_time)
     lib.plot.plot('/results/lang_' + mode + '/train disc cost', D_cost.cpu().data.numpy())
     lib.plot.plot('/results/lang_' + mode + '/train gen cost', G_cost.cpu().data.numpy())
-    print(iteration)
+
+    t3 = time.time()
+    print(str(iteration) + ' : ' + str(t1 - start_time) + ' : ' + str(t2 - t1) + ' : ' + str(t3 - t2))
 
     if iteration % 100 == 99:
         samples = []
