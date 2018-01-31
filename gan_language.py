@@ -123,7 +123,6 @@ class Discriminator(nn.Module):
         )
         self.conv1d = nn.Conv1d(len(charmap), DIM, 1)
         self.linear = nn.Linear(SEQ_LEN*DIM, 1)
-        self.sigmoid = nn.Sigmoid()
 
     def forward(self, input):
         output = input.transpose(1, 2) # (BATCH_SIZE, len(charmap), SEQ_LEN)
@@ -131,8 +130,6 @@ class Discriminator(nn.Module):
         output = self.block(output)
         output = output.view(-1, SEQ_LEN*DIM)
         output = self.linear(output)
-        if mode != 'wgp':
-            output = self.sigmoid(output)
         return output
 
 # Dataset iterator
