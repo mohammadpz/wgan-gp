@@ -300,11 +300,12 @@ for iteration in range(ITERS):
                     (D_cost_real + D_cost_fake).size()),
                 create_graph=True, retain_graph=True, only_inputs=True)
 
-            import ipdb; ipdb.set_trace()
             denoms = [torch.sum(g ** 2) for g in grads]
-            noms = [torch.sum(torch.mm(g.flatten(2), g.flatten(2).T) ** 2) for g in grads]
+            noms = [torch.sum(torch.mm(
+                g.view(g.size()[0], -1),
+                g.view(g.size()[0], -1).transpose(0, 1)) ** 2) for g in grads]
 
-            reg = T.sum([n / (d ** 2 + 1e-8) for n, d in zip(noms, denoms)])
+            pen = sum([n / (d ** 2 + 1e-8) for n, d in zip(noms, denoms)])
             pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads])
             pen.backward()
 
