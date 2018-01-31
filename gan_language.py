@@ -337,9 +337,9 @@ for iteration in range(ITERS):
     optimizerG.step()
 
     # Write logs and save samples
-    lib.plot.plot('/results/lang_' + mode + '/time', time.time() - start_time)
-    lib.plot.plot('/results/lang_' + mode + '/train disc cost', D_cost.cpu().data.numpy())
-    lib.plot.plot('/results/lang_' + mode + '/train gen cost', G_cost.cpu().data.numpy())
+    # lib.plot.plot('/results/lang_' + mode + '/time', time.time() - start_time)
+    # lib.plot.plot('/results/lang_' + mode + '/train disc cost', D_cost.cpu().data.numpy())
+    # lib.plot.plot('/results/lang_' + mode + '/train gen cost', G_cost.cpu().data.numpy())
 
     if iteration % 100 == 99:
         if mode == 'wgp' or mode == 'gp' or mode == 'reg':
