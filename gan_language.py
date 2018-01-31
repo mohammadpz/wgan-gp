@@ -274,7 +274,7 @@ for iteration in range(ITERS):
         # D_fake.backward(one)
 
         if mode == 'reg' or mode == 'gp' or mode == 'dwd':
-            label.resize_(BATCH_SIZE).fill_(0)
+            label.resize_(BATCH_SIZE, 1).fill_(0)
             labelv = autograd.Variable(label)
             output = netD(inputv)
             D_cost_fake = criterion(output, labelv)
