@@ -348,10 +348,10 @@ for iteration in range(ITERS):
         optimizerG.step()
 
     # Write logs and save samples
-    lib.plot.plot('/results/' + DATASET + '/' + 'disc cost', D_cost.cpu().data.numpy())
+    lib.plot.plot('/results/' + DATASET + '/' + 'D_cost', D_cost.cpu().data.numpy())
     # lib.plot.plot('/results/' + DATASET + '/' + 'wasserstein distance', Wasserstein_D.cpu().data.numpy())
     if not FIXED_GENERATOR:
-        lib.plot.plot('/results/' + DATASET + '/' + 'gen cost', G_cost.cpu().data.numpy())
+        lib.plot.plot('/results/' + DATASET + '/' + 'G_cost', G_cost.cpu().data.numpy())
     if iteration % 100 == 99:
         lib.plot.flush()
         generate_image(_data)
