@@ -66,27 +66,15 @@ class Discriminator(nn.Module):
 
     def __init__(self):
         super(Discriminator, self).__init__()
-        if mode == 'wgp':
-            main = nn.Sequential(
-                nn.Linear(2, DIM),
-                nn.ReLU(True),
-                nn.Linear(DIM, DIM),
-                nn.ReLU(True),
-                nn.Linear(DIM, DIM),
-                nn.ReLU(True),
-                nn.Linear(DIM, 1)
-            )
-        else:
-            main = nn.Sequential(
-                nn.Linear(2, DIM),
-                nn.ReLU(True),
-                nn.Linear(DIM, DIM),
-                nn.ReLU(True),
-                nn.Linear(DIM, DIM),
-                nn.ReLU(True),
-                nn.Linear(DIM, 1),
-                nn.Sigmoid()
-            )
+        main = nn.Sequential(
+            nn.Linear(2, DIM),
+            nn.ReLU(True),
+            nn.Linear(DIM, DIM),
+            nn.ReLU(True),
+            nn.Linear(DIM, DIM),
+            nn.ReLU(True),
+            nn.Linear(DIM, 1)
+        )
         self.main = main
 
     def forward(self, inputs):
@@ -269,7 +257,7 @@ if use_cuda:
 data = inf_train_gen()
 
 if mode != 'wgp':
-    criterion = nn.BCELoss()
+    criterion = nn.BCEWithLogitsLoss()
     label = torch.FloatTensor(BATCH_SIZE)
     if use_cuda:
         criterion.cuda()
