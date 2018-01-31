@@ -296,16 +296,25 @@ for iteration in range(ITERS):
         netD.zero_grad()
 
         # train with real
-        if mode != 'wgp':
+        if mode == 'dwd':
             label.resize_(BATCH_SIZE).fill_(1)
             labelv = autograd.Variable(label)
             output = netD(real_data_v)
-            D_real = criterion(output, labelv)
-            D_real.backward()
-        else:
-            D_real = netD(real_data_v)
-            D_real = D_real.mean()
-            D_real.backward(mone)
+            D_cost_real = criterion(output, labelv)
+            grads = autograd.grad(D_cost_real, netD.parameters())
+            pen = sum([torch.sum(g ** 2) for g in grads])
+            D_cost_real = D_cost_real + pen
+            D_cost_real.backward()
+        if mode == 'reg' or mode == 'gp':
+            label.resize_(BATCH_SIZE).fill_(1)
+            labelv = autograd.Variable(label)
+            output = netD(real_data_v)
+            D_cost_real = criterion(output, labelv)
+            D_cost_real.backward()
+        if mode == 'wgp':
+            D_cost_real = netD(real_data_v)
+            D_cost_real = D_cost_real.mean()
+            D_cost_real.backward(mone)
 
         # train with fake
         noise = torch.randn(BATCH_SIZE, 2)
@@ -314,34 +323,36 @@ for iteration in range(ITERS):
         noisev = autograd.Variable(noise, volatile=True)  # totally freeze netG
         fake = autograd.Variable(netG(noisev, real_data_v).data)
         inputv = fake
-        if mode != 'wgp':
+        if mode == 'dwd':
             label.resize_(BATCH_SIZE).fill_(0)
             labelv = autograd.Variable(label)
             output = netD(inputv)
-            D_fake = criterion(output, labelv)
-            import ipdb; ipdb.set_trace()
-            D_fake.backward()
-        else:
-            D_fake = netD(inputv)
-            D_fake = D_fake.mean()
-            D_fake.backward(one)
+            D_cost_fake = criterion(output, labelv)
+            grads = autograd.grad(D_cost_fake, netD.parameters())
+            pen = sum([torch.sum(g ** 2) for g in grads])
+            D_cost_fake = D_cost_fake + pen
+            D_cost_fake.backward()
+
+        if mode == 'reg' or mode == 'gp':
+            label.resize_(BATCH_SIZE).fill_(0)
+            labelv = autograd.Variable(label)
+            output = netD(inputv)
+            D_cost_fake = criterion(output, labelv)
+            D_cost_fake.backward()
+
+        if mode == 'wgp':
+            D_cost_fake = netD(inputv)
+            D_cost_fake = D_cost_fake.mean()
+            D_cost_fake.backward(one)
 
         if mode == 'wgp' or mode == 'gp':
             # train with gradient penalty
             gradient_penalty = calc_gradient_penalty(netD, real_data_v.data, fake.data)
             gradient_penalty.backward()
 
-        if mode == 'dwd':
-            dwd = calc_dwd(netD)
-            dwd.backward()
-
         optimizerD.step()
 
-        if mode != 'wgp':
-            D_cost = D_fake + D_real
-        else:
-            D_cost = D_fake - D_real + gradient_penalty
-            # Wasserstein_D = D_real - D_fake
+        D_cost = D_cost_fake + D_cost_real
 
     if not FIXED_GENERATOR:
         ############################
@@ -363,18 +374,18 @@ for iteration in range(ITERS):
         noisev = autograd.Variable(noise)
         fake = netG(noisev, real_data_v)
 
-        if mode != 'wgp':
+        if mode == 'reg' or mode == 'gp' or mode == 'dwd':
             label.resize_(BATCH_SIZE).fill_(1)
             labelv = autograd.Variable(label)
             output = netD(fake)
-            G = criterion(output, labelv)
-            G.backward()
-            G_cost = G
-        else:
-            G = netD(fake)
-            G = G.mean()
-            G.backward(mone)
-            G_cost = -G
+            G_cost = criterion(output, labelv)
+            G_cost.backward()
+
+        if mode == 'wgp':
+            G_cost = netD(fake)
+            G_cost = G_cost.mean()
+            G_cost.backward(mone)
+            G_cost = -G_cost
         optimizerG.step()
 
     # Write logs and save samples
