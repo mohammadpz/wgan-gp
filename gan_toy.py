@@ -308,10 +308,9 @@ for iteration in range(ITERS):
         optimizerD.step()
 
         if mode != 'wgp':
-            D_cost = D_fake - D_real + gradient_penalty
-            Wasserstein_D = D_real - D_fake
-        else:
             D_cost = D_fake + D_real
+        else:
+            D_cost = D_fake - D_real + gradient_penalty
             # Wasserstein_D = D_real - D_fake
 
     if not FIXED_GENERATOR:
