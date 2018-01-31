@@ -30,7 +30,7 @@ DATASET = '8gaussians'  # 8gaussians, 25gaussians, swissroll
 DIM = 512  # Model dimensionality
 FIXED_GENERATOR = False  # whether to hold the generator fixed at real data plus
 # Gaussian noise, as in the plots in the paper
-LAMBDA = 1  # Smaller lambda seems to help for toy tasks specifically
+LAMBDA = 100  # Smaller lambda seems to help for toy tasks specifically
 CRITIC_ITERS = 5  # How many critic iterations per generator iteration
 BATCH_SIZE = 256  # Batch size
 ITERS = 100000  # how many generator iterations to train for
@@ -345,7 +345,7 @@ for iteration in range(ITERS):
                 grad_outputs=torch.ones((D_cost_real + D_cost_fake).size()).cuda() if use_cuda else torch.ones(
                     (D_cost_real + D_cost_fake).size()),
                 create_graph=True, retain_graph=True, only_inputs=True)
-            pen = sum([torch.sum(g ** 2) for g in grads])
+            pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads])
             pen.backward()
 
         optimizerD.step()
