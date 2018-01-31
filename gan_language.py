@@ -293,6 +293,7 @@ for iteration in range(ITERS):
 
         if ('dwd' in mode):
             # grads = autograd.grad(D_cost_real + D_cost_fake, netD.parameters())
+            import ipdb; ipdb.set_trace()
             grads = autograd.grad(
                 outputs=D_cost_real + D_cost_fake,
                 inputs=netD.parameters(),
@@ -337,10 +338,16 @@ for iteration in range(ITERS):
     lib.plot.plot('/results/lang_' + mode + '/train disc cost', D_cost.cpu().data.numpy())
     lib.plot.plot('/results/lang_' + mode + '/train gen cost', G_cost.cpu().data.numpy())
 
-    if iteration % 10 == 0:
-        print(iteration)
-
     if iteration % 100 == 99:
+        if mode == 'wgp' or mode == 'gp' or mode == 'reg':
+            print('iter: ' + str(iteration) + ', ' +
+                  'G_cost: ' + str(G_cost.cpu().data.numpy()) + ', ' +
+                  'D_cost: ' + str(D_cost.cpu().data.numpy()) + ', ')
+        if mode == 'dwd':
+            print('iter: ' + str(iteration) + ', ' +
+                  'G_cost: ' + str(G_cost.cpu().data.numpy()) + ', ' +
+                  'D_cost: ' + str(D_cost.cpu().data.numpy()) + ', ' +
+                  'pen: ' + str(pen.cpu().data.numpy()))
         samples = []
         for i in range(10):
             samples.extend(generate_samples(netG))
