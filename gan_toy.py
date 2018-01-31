@@ -22,6 +22,8 @@ import torch.optim as optim
 
 torch.manual_seed(1)
 
+mode = str(sys.argv[1])
+print('Mode: ' + mode)
 
 MODE = 'wgan-gp'  # wgan or wgan-gp
 DATASET = '8gaussians'  # 8gaussians, 25gaussians, swissroll
@@ -64,16 +66,27 @@ class Discriminator(nn.Module):
 
     def __init__(self):
         super(Discriminator, self).__init__()
-
-        main = nn.Sequential(
-            nn.Linear(2, DIM),
-            nn.ReLU(True),
-            nn.Linear(DIM, DIM),
-            nn.ReLU(True),
-            nn.Linear(DIM, DIM),
-            nn.ReLU(True),
-            nn.Linear(DIM, 1),
-        )
+        if mode == 'wgp':
+            main = nn.Sequential(
+                nn.Linear(2, DIM),
+                nn.ReLU(True),
+                nn.Linear(DIM, DIM),
+                nn.ReLU(True),
+                nn.Linear(DIM, DIM),
+                nn.ReLU(True),
+                nn.Linear(DIM, 1)
+            )
+        else:
+            main = nn.Sequential(
+                nn.Linear(2, DIM),
+                nn.ReLU(True),
+                nn.Linear(DIM, DIM),
+                nn.ReLU(True),
+                nn.Linear(DIM, DIM),
+                nn.ReLU(True),
+                nn.Linear(DIM, 1),
+                nn.Sigmoid()
+            )
         self.main = main
 
     def forward(self, inputs):
@@ -233,8 +246,15 @@ if use_cuda:
 
 data = inf_train_gen()
 
-if not os.path.exists('/results/' + DATASET):
-    os.makedirs('/results/' + DATASET)
+if mode != 'wgp':
+    criterion = nn.BCELoss()
+    label = torch.FloatTensor(BATCH_SIZE)
+    if use_cuda:
+        criterion.cuda()
+        label = label.cuda()
+
+if not os.path.exists('/results/' + DATASET + '_' + mode):
+    os.makedirs('/results/' + DATASET + '_' + mode)
 for iteration in range(ITERS):
     ############################
     # (1) Update D network
@@ -252,9 +272,16 @@ for iteration in range(ITERS):
         netD.zero_grad()
 
         # train with real
-        D_real = netD(real_data_v)
-        D_real = D_real.mean()
-        D_real.backward(mone)
+        if mode != 'wgp':
+            label.resize_(BATCH_SIZE).fill_(1)
+            labelv = autograd.Variable(label)
+            output = netD(real_data_v)
+            D_real = criterion(output, labelv)
+            D_real.backward()
+        else:
+            D_real = netD(real_data_v)
+            D_real = D_real.mean()
+            D_real.backward(mone)
 
         # train with fake
         noise = torch.randn(BATCH_SIZE, 2)
@@ -263,17 +290,29 @@ for iteration in range(ITERS):
         noisev = autograd.Variable(noise, volatile=True)  # totally freeze netG
         fake = autograd.Variable(netG(noisev, real_data_v).data)
         inputv = fake
-        D_fake = netD(inputv)
-        D_fake = D_fake.mean()
-        D_fake.backward(one)
+        if mode != 'wgp':
+            label.resize_(BATCH_SIZE).fill_(0)
+            labelv = autograd.Variable(label)
+            output = netD(inputv)
+            D_fake = criterion(output, labelv)
+            D_fake.backward()
+        else:
+            D_fake = netD(inputv)
+            D_fake = D_fake.mean()
+            D_fake.backward(one)
 
         # train with gradient penalty
         gradient_penalty = calc_gradient_penalty(netD, real_data_v.data, fake.data)
         gradient_penalty.backward()
 
-        D_cost = D_fake - D_real + gradient_penalty
-        Wasserstein_D = D_real - D_fake
         optimizerD.step()
+
+        if mode != 'wgp':
+            D_cost = D_fake - D_real + gradient_penalty
+            Wasserstein_D = D_real - D_fake
+        else:
+            D_cost = D_fake + D_real
+            # Wasserstein_D = D_real - D_fake
 
     if not FIXED_GENERATOR:
         ############################
@@ -294,15 +333,24 @@ for iteration in range(ITERS):
             noise = noise.cuda()
         noisev = autograd.Variable(noise)
         fake = netG(noisev, real_data_v)
-        G = netD(fake)
-        G = G.mean()
-        G.backward(mone)
-        G_cost = -G
+
+        if mode != 'wgp':
+            label.resize_(BATCH_SIZE).fill_(1)
+            labelv = autograd.Variable(label)
+            output = netD(fake)
+            G = criterion(output, labelv)
+            G.backward()
+            G_cost = G
+        else:
+            G = netD(fake)
+            G = G.mean()
+            G.backward(mone)
+            G_cost = -G
         optimizerG.step()
 
     # Write logs and save samples
     lib.plot.plot('/results/' + DATASET + '/' + 'disc cost', D_cost.cpu().data.numpy())
-    lib.plot.plot('/results/' + DATASET + '/' + 'wasserstein distance', Wasserstein_D.cpu().data.numpy())
+    # lib.plot.plot('/results/' + DATASET + '/' + 'wasserstein distance', Wasserstein_D.cpu().data.numpy())
     if not FIXED_GENERATOR:
         lib.plot.plot('/results/' + DATASET + '/' + 'gen cost', G_cost.cpu().data.numpy())
     if iteration % 100 == 99:

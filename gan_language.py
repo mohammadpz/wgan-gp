@@ -23,7 +23,7 @@ if use_cuda:
     gpu = 0
 
 mode = str(sys.argv[1])
-print(mode)
+print('Mode: ' + mode)
 
 # Download Google Billion Word at http://www.statmt.org/lm-benchmark/ and
 # fill in the path to the extracted files here!
@@ -123,6 +123,7 @@ class Discriminator(nn.Module):
         )
         self.conv1d = nn.Conv1d(len(charmap), DIM, 1)
         self.linear = nn.Linear(SEQ_LEN*DIM, 1)
+        self.sigmoid = nn.Sigmoid()
 
     def forward(self, input):
         output = input.transpose(1, 2) # (BATCH_SIZE, len(charmap), SEQ_LEN)
@@ -130,6 +131,8 @@ class Discriminator(nn.Module):
         output = self.block(output)
         output = output.view(-1, SEQ_LEN*DIM)
         output = self.linear(output)
+        if mode != 'wgp':
+            output = self.sigmoid(output)
         return output
 
 # Dataset iterator
@@ -215,8 +218,15 @@ for i in range(4):
     print("validation set JSD for n={}: {}".format(i+1, true_char_ngram_lms[i].js_with(validation_char_ngram_lms[i])))
 true_char_ngram_lms = [language_helpers.NgramLanguageModel(i+1, lines, tokenize=False) for i in range(4)]
 
-if not os.path.exists('/results/lang'):
-    os.makedirs('/results/lang')
+if not os.path.exists('/results/lang_' + mode):
+    os.makedirs('/results/lang_' + mode)
+
+if mode != 'wgp':
+    criterion = nn.BCELoss()
+    label = torch.FloatTensor(BATCH_SIZE)
+    if use_cuda:
+        criterion.cuda()
+        label = label.cuda()
 
 for iteration in range(ITERS):
     start_time = time.time()
@@ -229,7 +239,6 @@ for iteration in range(ITERS):
     for iter_d in range(CRITIC_ITERS):
         _data = data.__next__()
         data_one_hot = one_hot.transform(_data.reshape(-1, 1)).toarray().reshape(BATCH_SIZE, -1, len(charmap))
-        #print data_one_hot.shape
         real_data = torch.Tensor(data_one_hot)
         if use_cuda:
             real_data = real_data.cuda(gpu)
