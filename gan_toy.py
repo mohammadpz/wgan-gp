@@ -139,7 +139,7 @@ def generate_image(true_dist):
     if not FIXED_GENERATOR:
         plt.scatter(samples[:, 0], samples[:, 1], c='green', marker='+')
 
-    plt.savefig('/results/' + DATASET + '/' + 'frame' + str(frame_index[0]) + '.jpg')
+    plt.savefig('/results/' + DATASET + '_' + mode +'/' + 'frame' + str(frame_index[0]) + '.jpg')
 
     frame_index[0] += 1
 
@@ -301,9 +301,10 @@ for iteration in range(ITERS):
             D_fake = D_fake.mean()
             D_fake.backward(one)
 
-        # train with gradient penalty
-        gradient_penalty = calc_gradient_penalty(netD, real_data_v.data, fake.data)
-        gradient_penalty.backward()
+        if mode == 'wgp' or mode == 'gp':
+            # train with gradient penalty
+            gradient_penalty = calc_gradient_penalty(netD, real_data_v.data, fake.data)
+            gradient_penalty.backward()
 
         optimizerD.step()
 
@@ -348,10 +349,9 @@ for iteration in range(ITERS):
         optimizerG.step()
 
     # Write logs and save samples
-    lib.plot.plot('/results/' + DATASET + '/' + 'D_cost', D_cost.cpu().data.numpy())
-    # lib.plot.plot('/results/' + DATASET + '/' + 'wasserstein distance', Wasserstein_D.cpu().data.numpy())
+    lib.plot.plot('/results/' + DATASET + '_' + mode + '/' + 'D_cost', D_cost.cpu().data.numpy())
     if not FIXED_GENERATOR:
-        lib.plot.plot('/results/' + DATASET + '/' + 'G_cost', G_cost.cpu().data.numpy())
+        lib.plot.plot('/results/' + DATASET + '_' + mode + '/' + 'G_cost', G_cost.cpu().data.numpy())
     if iteration % 100 == 99:
         lib.plot.flush()
         generate_image(_data)
