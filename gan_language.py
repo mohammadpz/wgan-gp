@@ -305,8 +305,8 @@ for iteration in range(ITERS):
                 g.view(g.size()[0], -1),
                 g.view(g.size()[0], -1).transpose(0, 1)) ** 2) for g in grads]
 
-            pen = sum([n / (d ** 2 + 1e-8) for n, d in zip(noms, denoms)])
-            pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads])
+            pen = LAMBDA * sum([n / (d ** 2 + 1e-8) for n, d in zip(noms, denoms)])
+            # pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads])
             pen.backward()
 
         D_cost = D_cost_real + D_cost_fake
