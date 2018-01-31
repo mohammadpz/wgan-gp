@@ -27,7 +27,7 @@ print('Mode: ' + mode)
 
 # Download Google Billion Word at http://www.statmt.org/lm-benchmark/ and
 # fill in the path to the extracted files here!
-DATA_DIR = '/mnt/one_bilion_extracted/1-billion-word-language-modeling-benchmark-r13output'
+DATA_DIR = '/mnt/dataset1/one_bilion_extracted/1-billion-word-language-modeling-benchmark-r13output'
 if not os.path.exists(DATA_DIR):
     DATA_DIR = '/workspace/data/oneb'
 if len(DATA_DIR) == 0:
