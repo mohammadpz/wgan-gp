@@ -118,7 +118,7 @@ def generate_image(true_dist):
     points[:, :, 1] = np.linspace(-RANGE, RANGE, N_POINTS)[None, :]
     points = points.reshape((-1, 2))
 
-    points_v = autograd.Variable(torch.Tensor(points))
+    points_v = autograd.Variable(torch.Tensor(points), volatile=True)
     if use_cuda:
         points_v = points_v.cuda()
     disc_map = netD(points_v).cpu().data.numpy()
@@ -126,7 +126,7 @@ def generate_image(true_dist):
     noise = torch.randn(BATCH_SIZE, 2)
     if use_cuda:
         noise = noise.cuda()
-    noisev = autograd.Variable(noise)
+    noisev = autograd.Variable(noise, volatile=True)
     true_dist_v = autograd.Variable(torch.Tensor(true_dist).cuda() if use_cuda else torch.Tensor(true_dist))
     samples = netG(noisev, true_dist_v).cpu().data.numpy()
 
@@ -320,7 +320,7 @@ for iteration in range(ITERS):
         noise = torch.randn(BATCH_SIZE, 2)
         if use_cuda:
             noise = noise.cuda()
-        noisev = autograd.Variable(noise)  # totally freeze netG
+        noisev = autograd.Variable(noise, volatile=True)  # totally freeze netG
         fake = autograd.Variable(netG(noisev, real_data_v).data)
         inputv = fake
         # if mode == 'dwd':
@@ -352,6 +352,7 @@ for iteration in range(ITERS):
         if mode == 'dwd':
             grads = autograd.grad(D_cost_real + D_cost_fake, netD.parameters())
             pen = sum([torch.sum(g ** 2) for g in grads])
+            import ipdb; ipdb.set_trace()
             pen.backward()
 
         optimizerD.step()
