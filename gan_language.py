@@ -82,14 +82,14 @@ class ResBlock(nn.Module):
 
     def forward(self, input):
         output = self.res_block(input)
-        return input + (0.3*output)
+        return input + (0.3 * output)
 
 class Generator(nn.Module):
 
     def __init__(self):
         super(Generator, self).__init__()
 
-        self.fc1 = nn.Linear(128, DIM*SEQ_LEN)
+        self.fc1 = nn.Linear(128, DIM * SEQ_LEN)
         self.block = nn.Sequential(
             ResBlock(),
             ResBlock(),
