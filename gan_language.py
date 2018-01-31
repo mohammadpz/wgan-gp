@@ -290,6 +290,7 @@ for iteration in range(ITERS):
             gradient_penalty.backward()
 
         if mode == 'dwd':
+            print('here')
             # grads = autograd.grad(D_cost_real + D_cost_fake, netD.parameters())
             grads = autograd.grad(
                 outputs=D_cost_real + D_cost_fake,
