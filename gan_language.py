@@ -346,7 +346,7 @@ for iteration in range(ITERS):
             print('iter: ' + str(iteration) + ', ' +
                   'G_cost: ' + str(G_cost.cpu().data.numpy()) + ', ' +
                   'D_cost: ' + str(D_cost.cpu().data.numpy()) + ', ')
-        if mode == 'dwd':
+        if ('dwd' in mode):
             print('iter: ' + str(iteration) + ', ' +
                   'G_cost: ' + str(G_cost.cpu().data.numpy()) + ', ' +
                   'D_cost: ' + str(D_cost.cpu().data.numpy()) + ', ' +
