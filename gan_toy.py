@@ -310,7 +310,7 @@ for iteration in range(ITERS):
             labelv = autograd.Variable(label)
             output = netD(real_data_v)
             D_cost_real = criterion(output, labelv)
-            D_cost_real.backward()
+            D_cost_real.backward(retain_graph=True)
         if mode == 'wgp':
             D_cost_real = netD(real_data_v)
             D_cost_real = D_cost_real.mean()
@@ -338,7 +338,7 @@ for iteration in range(ITERS):
             labelv = autograd.Variable(label)
             output = netD(inputv)
             D_cost_fake = criterion(output, labelv)
-            D_cost_fake.backward()
+            D_cost_fake.backward(retain_graph=True)
         if mode == 'wgp':
             D_cost_fake = netD(inputv)
             D_cost_fake = D_cost_fake.mean()
