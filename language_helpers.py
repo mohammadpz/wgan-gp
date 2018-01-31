@@ -136,8 +136,8 @@ def load_dataset(max_length, max_n_examples, tokenize=False, max_vocab_size=2048
                 filtered_line.append('unk')
         filtered_lines.append(tuple(filtered_line))
 
-    for i in range(100):
-        print(filtered_lines[i])
+    # for i in range(100):
+    #     print(filtered_lines[i])
 
     print("loaded {} lines in dataset".format(len(lines)))
     return filtered_lines, charmap, inv_charmap

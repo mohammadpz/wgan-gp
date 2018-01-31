@@ -44,7 +44,7 @@ DIM = 512 # Model dimensionality. This is fairly slow and overfits, even on
 CRITIC_ITERS = int(sys.argv[3])
 # LAMBDA = 10 # Gradient penalty lambda hyperparameter.
 LAMBDA = float(sys.argv[2])
-print("LAMBDA: " + str(LAMBDA))
+# print("LAMBDA: " + str(LAMBDA))
 MAX_N_EXAMPLES = 10000000#10000000 # Max number of data examples to load. If data loading
                           # is too slow or takes too much RAM, you can decrease
                           # this (at the expense of having less training data).
@@ -191,8 +191,8 @@ def generate_samples(netG):
 
 netG = Generator()
 netD = Discriminator()
-print(netG)
-print(netD)
+# print(netG)
+# print(netD)
 
 if use_cuda:
     netD = netD.cuda(gpu)
