@@ -38,9 +38,10 @@ ITERS = 200000 # How many iterations to train for
 SEQ_LEN = 32 # Sequence length in characters
 DIM = 512 # Model dimensionality. This is fairly slow and overfits, even on
           # Billion Word. Consider decreasing for smaller datasets.
-CRITIC_ITERS = 10 # How many critic iterations per generator iteration. We
+# CRITIC_ITERS = 10 # How many critic iterations per generator iteration. We
                   # use 10 for the results in the paper, but 5 should work fine
                   # as well.
+CRITIC_ITERS = int(sys.argv[3])
 # LAMBDA = 10 # Gradient penalty lambda hyperparameter.
 LAMBDA = float(sys.argv[2])
 print("LAMBDA: " + str(LAMBDA))
@@ -245,7 +246,7 @@ for iteration in range(ITERS):
 
         netD.zero_grad()
 
-        if mode == 'reg' or mode == 'gp' or mode == 'dwd':
+        if mode == 'reg' or mode == 'gp' or ('dwd' in mode):
             label.resize_(BATCH_SIZE, 1).fill_(1)
             labelv = autograd.Variable(label)
             output = netD(real_data_v)
@@ -275,7 +276,7 @@ for iteration in range(ITERS):
         # # TODO: Waiting for the bug fix from pytorch
         # D_fake.backward(one)
 
-        if mode == 'reg' or mode == 'gp' or mode == 'dwd':
+        if mode == 'reg' or mode == 'gp' or ('dwd' in mode):
             label.resize_(BATCH_SIZE, 1).fill_(0)
             labelv = autograd.Variable(label)
             output = netD(inputv)
@@ -291,7 +292,7 @@ for iteration in range(ITERS):
             gradient_penalty = calc_gradient_penalty(netD, real_data_v.data, fake.data)
             gradient_penalty.backward()
 
-        if mode == 'dwd':
+        if ('dwd' in mode):
             # grads = autograd.grad(D_cost_real + D_cost_fake, netD.parameters())
             grads = autograd.grad(
                 outputs=D_cost_real + D_cost_fake,
@@ -305,8 +306,10 @@ for iteration in range(ITERS):
                 g.view(g.size()[0], -1),
                 g.view(g.size()[0], -1).transpose(0, 1)) ** 2) for g in grads]
 
-            pen = LAMBDA * sum([n / (d ** 2 + 1e-8) for n, d in zip(noms, denoms)])
-            # pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads])
+            if '1' in mode:
+                pen = LAMBDA * sum([n / (d ** 2 + 1e-8) for n, d in zip(noms, denoms)])
+            if '2' in mode:
+                pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads])
             pen.backward()
 
         D_cost = D_cost_real + D_cost_fake
@@ -334,15 +337,12 @@ for iteration in range(ITERS):
     lib.plot.plot('/results/lang_' + mode + '/time', time.time() - start_time)
     lib.plot.plot('/results/lang_' + mode + '/train disc cost', D_cost.cpu().data.numpy())
     lib.plot.plot('/results/lang_' + mode + '/train gen cost', G_cost.cpu().data.numpy())
+    print(iteration)
 
     if iteration % 100 == 99:
         samples = []
         for i in range(10):
             samples.extend(generate_samples(netG))
-
-        for i in range(4):
-            lm = language_helpers.NgramLanguageModel(i+1, samples, tokenize=False)
-            lib.plot.plot('/results/lang_' + mode + '/js{}'.format(i+1), lm.js_with(true_char_ngram_lms[i]))
 
         with open('/results/lang_' + mode + '/samples_{}.txt'.format(iteration), 'w') as f:
             for s in samples:
