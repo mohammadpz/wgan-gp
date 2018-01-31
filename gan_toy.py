@@ -127,7 +127,7 @@ def generate_image(true_dist):
     if not FIXED_GENERATOR:
         plt.scatter(samples[:, 0], samples[:, 1], c='green', marker='+')
 
-    plt.savefig('/results/' + DATASET + '_' + mode +'/' + 'frame' + str(frame_index[0]) + '.jpg')
+    plt.savefig('/results/' + DATASET + '_' + mode + '/' + 'frame' + str(frame_index[0]) + '.jpg')
 
     frame_index[0] += 1
 

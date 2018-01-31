@@ -222,7 +222,7 @@ if not os.path.exists('/results/lang_' + mode):
     os.makedirs('/results/lang_' + mode)
 
 if mode != 'wgp':
-    criterion = nn.BCELoss()
+    criterion = nn.BCEWithLogitsLoss()
     label = torch.FloatTensor(BATCH_SIZE)
     if use_cuda:
         criterion.cuda()
@@ -246,12 +246,23 @@ for iteration in range(ITERS):
 
         netD.zero_grad()
 
-        # train with real
-        D_real = netD(real_data_v)
-        D_real = D_real.mean()
-        # print D_real
-        # TODO: Waiting for the bug fix from pytorch
-        D_real.backward(mone)
+        if mode == 'reg' or mode == 'gp' or mode == 'dwd':
+            label.resize_(BATCH_SIZE).fill_(1)
+            labelv = autograd.Variable(label)
+            output = netD(real_data_v)
+            D_cost_real = criterion(output, labelv)
+            D_cost_real.backward(retain_graph=True)
+        if mode == 'wgp':
+            D_cost_real = netD(real_data_v)
+            D_cost_real = D_cost_real.mean()
+            D_cost_real.backward(mone)
+
+        # # train with real
+        # D_real = netD(real_data_v)
+        # D_real = D_real.mean()
+        # # print D_real
+        # # TODO: Waiting for the bug fix from pytorch
+        # D_real.backward(mone)
 
         # train with fake
         noise = torch.randn(BATCH_SIZE, 128)
@@ -260,17 +271,39 @@ for iteration in range(ITERS):
         noisev = autograd.Variable(noise, volatile=True)  # totally freeze netG
         fake = autograd.Variable(netG(noisev).data)
         inputv = fake
-        D_fake = netD(inputv)
-        D_fake = D_fake.mean()
-        # TODO: Waiting for the bug fix from pytorch
-        D_fake.backward(one)
+        # D_fake = netD(inputv)
+        # D_fake = D_fake.mean()
+        # # TODO: Waiting for the bug fix from pytorch
+        # D_fake.backward(one)
 
-        # train with gradient penalty
-        gradient_penalty = calc_gradient_penalty(netD, real_data_v.data, fake.data)
-        gradient_penalty.backward()
+        if mode == 'reg' or mode == 'gp' or mode == 'dwd':
+            label.resize_(BATCH_SIZE).fill_(0)
+            labelv = autograd.Variable(label)
+            output = netD(inputv)
+            D_cost_fake = criterion(output, labelv)
+            D_cost_fake.backward(retain_graph=True)
+        if mode == 'wgp':
+            D_cost_fake = netD(inputv)
+            D_cost_fake = D_cost_fake.mean()
+            D_cost_fake.backward(one)
 
-        D_cost = D_fake - D_real + gradient_penalty
-        Wasserstein_D = D_real - D_fake
+        if mode == 'wgp' or mode == 'gp':
+            # train with gradient penalty
+            gradient_penalty = calc_gradient_penalty(netD, real_data_v.data, fake.data)
+            gradient_penalty.backward()
+
+        if mode == 'dwd':
+            # grads = autograd.grad(D_cost_real + D_cost_fake, netD.parameters())
+            grads = autograd.grad(
+                outputs=D_cost_real + D_cost_fake,
+                inputs=netD.parameters(),
+                grad_outputs=torch.ones((D_cost_real + D_cost_fake).size()).cuda() if use_cuda else torch.ones(
+                    (D_cost_real + D_cost_fake).size()),
+                create_graph=True, retain_graph=True, only_inputs=True)
+            pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads])
+            pen.backward()
+
+        D_cost = D_cost_real + D_cost_fake
         optimizerD.step()
 
     ############################
@@ -292,10 +325,9 @@ for iteration in range(ITERS):
     optimizerG.step()
 
     # Write logs and save samples
-    lib.plot.plot('/results/lang/time', time.time() - start_time)
-    lib.plot.plot('/results/lang/train disc cost', D_cost.cpu().data.numpy())
-    lib.plot.plot('/results/lang/train gen cost', G_cost.cpu().data.numpy())
-    lib.plot.plot('/results/lang/wasserstein distance', Wasserstein_D.cpu().data.numpy())
+    lib.plot.plot('/results/lang_' + mode + '/time', time.time() - start_time)
+    lib.plot.plot('/results/lang_' + mode + '/train disc cost', D_cost.cpu().data.numpy())
+    lib.plot.plot('/results/lang_' + mode + '/train gen cost', G_cost.cpu().data.numpy())
 
     if iteration % 100 == 99:
         samples = []
@@ -304,9 +336,9 @@ for iteration in range(ITERS):
 
         for i in range(4):
             lm = language_helpers.NgramLanguageModel(i+1, samples, tokenize=False)
-            lib.plot.plot('/results/lang/js{}'.format(i+1), lm.js_with(true_char_ngram_lms[i]))
+            lib.plot.plot('/results/lang_' + mode + '/js{}'.format(i+1), lm.js_with(true_char_ngram_lms[i]))
 
-        with open('/results/lang/samples_{}.txt'.format(iteration), 'w') as f:
+        with open('/results/lang_' + mode + '/samples_{}.txt'.format(iteration), 'w') as f:
             for s in samples:
                 s = "".join(s)
                 f.write(s + "\n")
