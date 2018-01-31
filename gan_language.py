@@ -43,6 +43,7 @@ CRITIC_ITERS = 10 # How many critic iterations per generator iteration. We
                   # as well.
 # LAMBDA = 10 # Gradient penalty lambda hyperparameter.
 LAMBDA = float(sys.argv[2])
+print("LAMBDA: " + str(LAMBDA))
 MAX_N_EXAMPLES = 10000000#10000000 # Max number of data examples to load. If data loading
                           # is too slow or takes too much RAM, you can decrease
                           # this (at the expense of having less training data).
