@@ -292,7 +292,6 @@ for iteration in range(ITERS):
             gradient_penalty.backward()
 
         if mode == 'dwd':
-            print('here')
             # grads = autograd.grad(D_cost_real + D_cost_fake, netD.parameters())
             grads = autograd.grad(
                 outputs=D_cost_real + D_cost_fake,
@@ -300,6 +299,12 @@ for iteration in range(ITERS):
                 grad_outputs=torch.ones((D_cost_real + D_cost_fake).size()).cuda() if use_cuda else torch.ones(
                     (D_cost_real + D_cost_fake).size()),
                 create_graph=True, retain_graph=True, only_inputs=True)
+
+            import ipdb; ipdb.set_trace()
+            denoms = [torch.sum(g ** 2) for g in grads]
+            noms = [torch.sum(torch.mm(g.flatten(2), g.flatten(2).T) ** 2) for g in grads]
+
+            reg = T.sum([n / (d ** 2 + 1e-8) for n, d in zip(noms, denoms)])
             pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads])
             pen.backward()
 
