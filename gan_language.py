@@ -293,10 +293,13 @@ for iteration in range(ITERS):
 
         if ('dwd' in mode):
             # grads = autograd.grad(D_cost_real + D_cost_fake, netD.parameters())
-            import ipdb; ipdb.set_trace()
+            list_weights = []
+            for name, param in netD.named_parameters():
+                if 'bias' not in name:
+                    list_weights += [param]
             grads = autograd.grad(
                 outputs=D_cost_real + D_cost_fake,
-                inputs=netD.parameters(),
+                inputs=list_weights,
                 grad_outputs=torch.ones((D_cost_real + D_cost_fake).size()).cuda() if use_cuda else torch.ones(
                     (D_cost_real + D_cost_fake).size()),
                 create_graph=True, retain_graph=True, only_inputs=True)
