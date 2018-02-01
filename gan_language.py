@@ -415,7 +415,7 @@ for iteration in range(ITERS):
                 s = "".join(s)
                 f.write(s + "\n")
 
-    if iteration == 50:
+    if iteration == 2500:
         print('SVDS saved!')
         np.save('/results/lang_' + mode + '/svds', svds)
         svdplot('/results/lang_' + mode + '/')
