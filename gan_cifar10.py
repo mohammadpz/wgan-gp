@@ -21,19 +21,25 @@ from torch import optim
 # Download CIFAR-10 (Python version) at
 # https://www.cs.toronto.edu/~kriz/cifar.html and fill in the path to the
 # extracted files here!
-DATA_DIR = '/workspace/data/cifar-10-batches-py/'
+DATA_DIR = '/mnt/dataset2'
 if not os.path.exists(DATA_DIR):
-    DATA_DIR = '/u/pezeshki/cifar-10-batches-py'
+    DATA_DIR = '/workspace/data/cifar-10-batches-py'
 if len(DATA_DIR) == 0:
     raise Exception('Please specify path to data directory in gan_cifar.py!')
 
 if not os.path.exists('/results/cifar10'):
     os.makedirs('/results/cifar10')
 
-MODE = 'wgan-gp' # Valid options are dcgan, wgan, or wgan-gp
+# MODE = 'wgan-gp' # Valid options are dcgan, wgan, or wgan-gp
+
+mode = str(sys.argv[1])
+print('Mode: ' + mode)
+
 DIM = 128 # This overfits substantially; you're probably better off with 64
-LAMBDA = 10 # Gradient penalty lambda hyperparameter
-CRITIC_ITERS = 5 # How many critic iterations per generator iteration
+# LAMBDA = 10 # Gradient penalty lambda hyperparameter
+LAMBDA = float(sys.argv[2])
+# CRITIC_ITERS = 5 # How many critic iterations per generator iteration
+CRITIC_ITERS = int(sys.argv[3])
 BATCH_SIZE = 64 # Batch size
 ITERS = 200000 # How many generator iterations to train for
 OUTPUT_DIM = 3072 # Number of pixels in CIFAR10 (3*32*32)

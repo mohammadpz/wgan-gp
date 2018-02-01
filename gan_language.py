@@ -50,7 +50,7 @@ MAX_N_EXAMPLES = 10000000#10000000 # Max number of data examples to load. If dat
                           # is too slow or takes too much RAM, you can decrease
                           # this (at the expense of having less training data).
 B1 = float(sys.argv[4])
-print('b1: ' + str(B1))
+print('B1: ' + str(B1))
 
 LR = float(sys.argv[5])
 print('LR: ' + str(LR))
@@ -310,7 +310,9 @@ for iteration in range(ITERS):
             # grads = autograd.grad(D_cost_real + D_cost_fake, netD.parameters())
             list_weights = []
             for name, param in netD.named_parameters():
-                if 'bias' not in name:
+                # if 'bias' not in name:
+                #     list_weights += [param]
+                if 'conv1d' in name:
                     list_weights += [param]
 
             grads = autograd.grad(
@@ -360,21 +362,21 @@ for iteration in range(ITERS):
         G_cost.backward(mone)
         G_cost = -G_cost
 
-    if ('dwd' in mode):
-        list_weights = []
-        for name, param in netG.named_parameters():
-            if 'bias' not in name:
-                list_weights += [param]
+    # if ('dwd' in mode):
+    #     list_weights = []
+    #     for name, param in netG.named_parameters():
+    #         if 'bias' not in name:
+    #             list_weights += [param]
 
-        grads = autograd.grad(
-            outputs=G_cost,
-            inputs=list_weights,
-            grad_outputs=torch.ones((G_cost).size()).cuda() if use_cuda else torch.ones(
-                (G_cost).size()),
-            create_graph=True, retain_graph=True, only_inputs=True)
+    #     grads = autograd.grad(
+    #         outputs=G_cost,
+    #         inputs=list_weights,
+    #         grad_outputs=torch.ones((G_cost).size()).cuda() if use_cuda else torch.ones(
+    #             (G_cost).size()),
+    #         create_graph=True, retain_graph=True, only_inputs=True)
 
-        pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads]) / 3.0
-        pen.backward()
+    #     pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads]) / 3.0
+    #     pen.backward()
 
     optimizerG.step()
 
