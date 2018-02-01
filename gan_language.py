@@ -368,12 +368,14 @@ for iteration in range(ITERS):
     if iteration % 100 == 99:
         for name, param in netG.named_parameters():
             if 'bias' not in name:
+                print(str(iteration) + ': ' + name)
                 p = param.cpu().data.numpy()
                 svds[name] += [np.linalg.svd(
                     p.reshape((p.shape[0], -1)),
                     full_matrices=False, compute_uv=False)]
         for name, param in netD.named_parameters():
             if 'bias' not in name:
+                print(str(iteration) + ': ' + name)
                 p = param.cpu().data.numpy()
                 svds[name] += [np.linalg.svd(
                     p.reshape((p.shape[0], -1)),
