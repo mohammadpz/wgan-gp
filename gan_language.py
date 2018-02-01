@@ -234,6 +234,14 @@ if mode != 'wgp':
         criterion.cuda()
         label = label.cuda()
 
+svds = {}
+for name, param in netG.named_parameters():
+    if 'bias' not in name:
+        svds[name] = []
+for name, param in netD.named_parameters():
+    if 'bias' not in name:
+        svds[name] = []
+
 for iteration in range(ITERS):
     start_time = time.time()
     ############################
@@ -358,7 +366,22 @@ for iteration in range(ITERS):
     # lib.plot.plot('/results/lang_' + mode + '/train gen cost', G_cost.cpu().data.numpy())
 
     if iteration % 100 == 99:
-        import ipdb; ipdb.set_trace()
+        for name, param in netG.named_parameters():
+            if 'bias' not in name:
+                p = param.cpu().data.numpy()
+                svds[name] += [np.linalg.svd(
+                    p.reshape((p.shape[0], -1)),
+                    full_matrices=False, compute_uv=False)]
+        for name, param in netD.named_parameters():
+            if 'bias' not in name:
+                p = param.cpu().data.numpy()
+                svds[name] += [np.linalg.svd(
+                    p.reshape((p.shape[0], -1)),
+                    full_matrices=False, compute_uv=False)]
+
+        if iteration == 299:
+            import ipdb; ipdb.set_trace()
+
         if mode == 'wgp' or mode == 'gp' or mode == 'reg':
             print('iter: ' + str(iteration) + ', ' +
                   'G_cost: ' + str(G_cost.cpu().data.numpy()) + ', ' +
