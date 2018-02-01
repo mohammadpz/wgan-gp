@@ -312,10 +312,6 @@ for iteration in range(ITERS):
                 if 'bias' not in name:
                     list_weights += [param]
 
-            for name, param in netG.named_parameters():
-                pass
-            list_weights += [param]
-
             grads = autograd.grad(
                 outputs=D_cost_real + D_cost_fake,
                 inputs=list_weights,
@@ -362,6 +358,24 @@ for iteration in range(ITERS):
         G_cost = G_cost.mean()
         G_cost.backward(mone)
         G_cost = -G_cost
+
+    if ('dwd' in mode):
+        list_weights = []
+        for name, param in netG.named_parameters():
+            if 'conv1.weight' in name:
+                list_weights += [param]
+
+        assert len(list_weights) == 1
+
+        grads = autograd.grad(
+            outputs=G_cost,
+            inputs=list_weights,
+            grad_outputs=torch.ones((G_cost).size()).cuda() if use_cuda else torch.ones(
+                (G_cost).size()),
+            create_graph=True, retain_graph=True, only_inputs=True)
+
+        pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads])
+        pen.backward()
 
     optimizerG.step()
 
