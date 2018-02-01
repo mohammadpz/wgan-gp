@@ -92,7 +92,7 @@ def load_dataset(max_length, max_n_examples, tokenize=False, max_vocab_size=2048
 
     finished = False
 
-    for i in range(99):
+    for i in range(2):
         path = data_dir+("/training-monolingual.tokenized.shuffled/news.en-{}-of-00100".format(str(i+1).zfill(5)))
         with open(path, 'r') as f:
             for line in f:

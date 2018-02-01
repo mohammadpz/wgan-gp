@@ -358,6 +358,7 @@ for iteration in range(ITERS):
     # lib.plot.plot('/results/lang_' + mode + '/train gen cost', G_cost.cpu().data.numpy())
 
     if iteration % 100 == 99:
+        import ipdb; ipdb.set_trace()
         if mode == 'wgp' or mode == 'gp' or mode == 'reg':
             print('iter: ' + str(iteration) + ', ' +
                   'G_cost: ' + str(G_cost.cpu().data.numpy()) + ', ' +
