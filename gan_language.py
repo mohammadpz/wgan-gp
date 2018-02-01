@@ -368,21 +368,16 @@ for iteration in range(ITERS):
     if iteration % 100 == 99:
         for name, param in netG.named_parameters():
             if 'bias' not in name:
-                print(str(iteration) + ': ' + name)
                 p = param.cpu().data.numpy()
-                svds[name] += [np.linalg.svd(
+                svds['G.' + name] += [np.linalg.svd(
                     p.reshape((p.shape[0], -1)),
                     full_matrices=False, compute_uv=False)]
         for name, param in netD.named_parameters():
             if 'bias' not in name:
-                print(str(iteration) + ': ' + name)
                 p = param.cpu().data.numpy()
-                svds[name] += [np.linalg.svd(
+                svds['D.' + name] += [np.linalg.svd(
                     p.reshape((p.shape[0], -1)),
                     full_matrices=False, compute_uv=False)]
-
-        if iteration == 299:
-            import ipdb; ipdb.set_trace()
 
         if mode == 'wgp' or mode == 'gp' or mode == 'reg':
             print('iter: ' + str(iteration) + ', ' +
@@ -401,6 +396,10 @@ for iteration in range(ITERS):
             for s in samples:
                 s = "".join(s)
                 f.write(s + "\n")
+
+    if iteration % 2000 == 99:
+        print('SVDS saved!')
+        np.save('/results/lang_' + mode + '/svds', svds)
 
     if iteration % 100 == 99:
         lib.plot.flush()
