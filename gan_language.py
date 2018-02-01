@@ -200,8 +200,10 @@ if use_cuda:
     netD = netD.cuda(gpu)
     netG = netG.cuda(gpu)
 
-optimizerD = optim.Adam(netD.parameters(), lr=3 * 1e-5, betas=(B1, 0.9))
-optimizerG = optim.Adam(netG.parameters(), lr=3 * 1e-5, betas=(B1, 0.9))
+# optimizerD = optim.Adam(netD.parameters(), lr=3 * 1e-5, betas=(B1, 0.9))
+# optimizerG = optim.Adam(netG.parameters(), lr=3 * 1e-5, betas=(B1, 0.9))
+optimizerD = optim.SGD(netD.parameters(), lr=1e-4, momentum=B1)
+optimizerG = optim.SGD(netG.parameters(), lr=1e-4, momentum=B1)
 
 one = torch.FloatTensor([1])
 mone = one * -1
