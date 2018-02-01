@@ -362,7 +362,7 @@ for iteration in range(ITERS):
     if ('dwd' in mode):
         list_weights = []
         for name, param in netG.named_parameters():
-            if 'conv1.weight' in name:
+            if 'bias' not in name:
                 list_weights += [param]
 
         assert len(list_weights) == 1
@@ -374,7 +374,7 @@ for iteration in range(ITERS):
                 (G_cost).size()),
             create_graph=True, retain_graph=True, only_inputs=True)
 
-        pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads])
+        pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads]) / 3.0
         pen.backward()
 
     optimizerG.step()
