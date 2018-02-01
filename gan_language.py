@@ -311,6 +311,11 @@ for iteration in range(ITERS):
             for name, param in netD.named_parameters():
                 if 'bias' not in name:
                     list_weights += [param]
+
+            for name, param in netG.named_parameters():
+                pass
+            list_weights += [param]
+
             grads = autograd.grad(
                 outputs=D_cost_real + D_cost_fake,
                 inputs=list_weights,
