@@ -198,8 +198,8 @@ if use_cuda:
     netD = netD.cuda(gpu)
     netG = netG.cuda(gpu)
 
-optimizerD = optim.Adam(netD.parameters(), lr=1e-4, betas=(0.5, 0.9))
-optimizerG = optim.Adam(netG.parameters(), lr=1e-4, betas=(0.5, 0.9))
+optimizerD = optim.Adam(netD.parameters(), lr=1e-4, betas=(0.9, 0.999))
+optimizerG = optim.Adam(netG.parameters(), lr=1e-4, betas=(0.9, 0.999))
 
 one = torch.FloatTensor([1])
 mone = one * -1
@@ -343,28 +343,6 @@ for iteration in range(ITERS):
         G_cost = G_cost.mean()
         G_cost.backward(mone)
         G_cost = -G_cost
-    optimizerG.step()
-
-    # if ('dwd' in mode) and '3' in mode:
-    #     # grads = autograd.grad(D_cost_real + D_cost_fake, netD.parameters())
-    #     list_weights = []
-    #     for name, param in netG.named_parameters():
-    #         if 'bias' not in name:
-    #             list_weights += [param]
-    #     grads = autograd.grad(
-    #         outputs=D_cost_real + D_cost_fake,
-    #         inputs=list_weights,
-    #         grad_outputs=torch.ones((D_cost_real + D_cost_fake).size()).cuda() if use_cuda else torch.ones(
-    #             (D_cost_real + D_cost_fake).size()),
-    #         create_graph=True, retain_graph=True, only_inputs=True)
-
-    #     denoms = [torch.sum(g ** 2) for g in grads]
-    #     noms = [torch.sum(torch.mm(
-    #         g.view(g.size()[0], -1),
-    #         g.view(g.size()[0], -1).transpose(0, 1)) ** 2) for g in grads]
-
-    #     pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads])
-    #     pen.backward()
 
     optimizerG.step()
 
