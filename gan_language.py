@@ -397,7 +397,7 @@ for iteration in range(ITERS):
                 s = "".join(s)
                 f.write(s + "\n")
 
-    if iteration % 2000 == 99:
+    if iteration % 100 == 99:
         print('SVDS saved!')
         np.save('/results/lang_' + mode + '/svds', svds)
 
