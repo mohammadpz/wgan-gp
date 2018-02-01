@@ -365,8 +365,6 @@ for iteration in range(ITERS):
             if 'bias' not in name:
                 list_weights += [param]
 
-        assert len(list_weights) == 1
-
         grads = autograd.grad(
             outputs=G_cost,
             inputs=list_weights,
