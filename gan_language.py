@@ -48,6 +48,8 @@ LAMBDA = float(sys.argv[2])
 MAX_N_EXAMPLES = 10000000#10000000 # Max number of data examples to load. If data loading
                           # is too slow or takes too much RAM, you can decrease
                           # this (at the expense of having less training data).
+B1 = float(sys.argv[4])
+print('b1: ' + str(B1))
 
 
 lib.print_model_settings(locals().copy())
@@ -198,8 +200,8 @@ if use_cuda:
     netD = netD.cuda(gpu)
     netG = netG.cuda(gpu)
 
-optimizerD = optim.Adam(netD.parameters(), lr=1e-4, betas=(0.5, 0.9))
-optimizerG = optim.Adam(netG.parameters(), lr=1e-4, betas=(0.5, 0.9))
+optimizerD = optim.Adam(netD.parameters(), lr=1e-4, betas=(B1, 0.9))
+optimizerG = optim.Adam(netG.parameters(), lr=1e-4, betas=(B1, 0.9))
 
 one = torch.FloatTensor([1])
 mone = one * -1
