@@ -51,6 +51,8 @@ MAX_N_EXAMPLES = 10000000#10000000 # Max number of data examples to load. If dat
 B1 = float(sys.argv[4])
 print('b1: ' + str(B1))
 
+LR = float(sys.argv[5])
+print('LR: ' + str(LR))
 
 lib.print_model_settings(locals().copy())
 
@@ -200,10 +202,10 @@ if use_cuda:
     netD = netD.cuda(gpu)
     netG = netG.cuda(gpu)
 
-# optimizerD = optim.Adam(netD.parameters(), lr=3 * 1e-5, betas=(B1, 0.9))
-# optimizerG = optim.Adam(netG.parameters(), lr=3 * 1e-5, betas=(B1, 0.9))
-optimizerD = optim.SGD(netD.parameters(), lr=1e-4, momentum=B1)
-optimizerG = optim.SGD(netG.parameters(), lr=1e-4, momentum=B1)
+# optimizerD = optim.Adam(netD.parameters(), lr=LR betas=(B1, 0.9))
+# optimizerG = optim.Adam(netG.parameters(), lr=LR betas=(B1, 0.9))
+optimizerD = optim.SGD(netD.parameters(), lr=LR, momentum=B1)
+optimizerG = optim.SGD(netG.parameters(), lr=LR, momentum=B1)
 
 one = torch.FloatTensor([1])
 mone = one * -1
