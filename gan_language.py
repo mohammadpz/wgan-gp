@@ -351,7 +351,7 @@ for iteration in range(ITERS):
         labelv = autograd.Variable(label)
         output = netD(fake)
         G_cost = criterion(output, labelv)
-        G_cost.backward()
+        G_cost.backward(retain_graph=True)
 
     if mode == 'wgp':
         G_cost = netD(fake)
