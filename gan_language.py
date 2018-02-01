@@ -331,7 +331,7 @@ for iteration in range(ITERS):
     noisev = autograd.Variable(noise)
     fake = netG(noisev)
 
-    if mode == 'reg' or mode == 'gp' or mode == 'dwd':
+    if mode == 'reg' or mode == 'gp' or ('dwd' in mode):
         label.resize_(BATCH_SIZE, 1).fill_(1)
         labelv = autograd.Variable(label)
         output = netD(fake)
