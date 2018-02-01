@@ -39,7 +39,7 @@ def svdplot(where):
         'G.block.0.res_block.1.weight',
         'G.fc1.weight']
 
-    print 'Plotting Gen ...'
+    print('Plotting Gen ...')
     fig = plt.figure(figsize=np.array([40, 40]))
     plt.rcParams['lines.linewidth'] = 1.0
     for i, name in enumerate(gen):
@@ -51,7 +51,7 @@ def svdplot(where):
                 plt.setp(ax.get_xticklabels(), visible=False)
             ax.set_xlim([0, (len(svs) - 1)])
             # ax.set_ylim([0, 15])
-    print 'Plotting Dis ...'
+    print('Plotting Dis ...')
     for i, name in enumerate(dis):
             svs = np.array(f[name])
             ax = fig.add_subplot(12, 2, 2 * i + 2)
