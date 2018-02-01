@@ -237,10 +237,10 @@ if mode != 'wgp':
 svds = {}
 for name, param in netG.named_parameters():
     if 'bias' not in name:
-        svds[name] = []
+        svds['G.' + name] = []
 for name, param in netD.named_parameters():
     if 'bias' not in name:
-        svds[name] = []
+        svds['D.' + name] = []
 
 for iteration in range(ITERS):
     start_time = time.time()
