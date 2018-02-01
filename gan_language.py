@@ -286,10 +286,25 @@ for iteration in range(ITERS):
             D_cost_fake = D_cost_fake.mean()
             D_cost_fake.backward(one)
 
-        if mode == 'wgp' or mode == 'gp':
-            # train with gradient penalty
-            gradient_penalty = calc_gradient_penalty(netD, real_data_v.data, fake.data)
-            gradient_penalty.backward()
+        # if mode == 'wgp' or mode == 'gp':
+        #     # train with gradient penalty
+        #     gradient_penalty = calc_gradient_penalty(netD, real_data_v.data, fake.data)
+        #     gradient_penalty.backward()
+
+        if mode == 'wgp':
+            list_weights = []
+            for name, param in netD.named_parameters():
+                if 'bias' not in name:
+                    list_weights += [param]
+            grads = autograd.grad(
+                outputs=D_cost_real + D_cost_fake,
+                inputs=list_weights,
+                grad_outputs=torch.ones((D_cost_real + D_cost_fake).size()).cuda() if use_cuda else torch.ones(
+                    (D_cost_real + D_cost_fake).size()),
+                create_graph=True, retain_graph=True, only_inputs=True)
+
+            pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads])
+            pen.backward()
 
         if ('dwd' in mode):
             # grads = autograd.grad(D_cost_real + D_cost_fake, netD.parameters())
