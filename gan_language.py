@@ -14,6 +14,7 @@ import torch.optim as optim
 import language_helpers
 import tflib as lib
 import tflib.plot
+from svd_plot import svdplot
 
 from sklearn.preprocessing import OneHotEncoder
 
@@ -414,9 +415,11 @@ for iteration in range(ITERS):
                 s = "".join(s)
                 f.write(s + "\n")
 
-    if iteration % 100 == 99:
+    if iteration == 50:
         print('SVDS saved!')
         np.save('/results/lang_' + mode + '/svds', svds)
+        svdplot('/results/lang_' + mode + '/')
+        os._exit(0)
 
     if iteration % 100 == 99:
         lib.plot.flush()
