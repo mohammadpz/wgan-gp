@@ -388,6 +388,8 @@ for iteration in range(ITERS):
     # lib.plot.plot('/results/lang_' + mode + '/train disc cost', D_cost.cpu().data.numpy())
     # lib.plot.plot('/results/lang_' + mode + '/train gen cost', G_cost.cpu().data.numpy())
 
+    import ipdb; ipdb.set_trace()
+
     if iteration % 100 == 99:
         for name, param in netG.named_parameters():
             if 'bias' not in name:
