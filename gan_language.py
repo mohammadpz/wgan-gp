@@ -389,13 +389,17 @@ for iteration in range(ITERS):
     # lib.plot.plot('/results/lang_' + mode + '/train gen cost', G_cost.cpu().data.numpy())
 
     if iteration % 100 == 0:
-        import ipdb; ipdb.set_trace()
+        for p in netD.parameters():
+            p.requires_grad = True
+
         gradsD = autograd.grad(
             outputs=D_cost_real + D_cost_fake,
             inputs=netD.parameters(),
             grad_outputs=torch.ones((D_cost_real + D_cost_fake).size()).cuda() if use_cuda else torch.ones(
                 (D_cost_real + D_cost_fake).size()),
             create_graph=True, retain_graph=True, only_inputs=True)
+        for p in netD.parameters():
+            p.requires_grad = False
 
         gradsG = autograd.grad(
             outputs=G_cost,
