@@ -393,6 +393,8 @@ for iteration in range(ITERS):
         string = ''
         for name, param in netG.named_parameters():
             string += name + ': ' + str(torch.sqrt(torch.sum(param ** 2)).cpu().data.numpy()[0]) + ', '
+        for name, param in netD.named_parameters():
+            string += name + ': ' + str(torch.sqrt(torch.sum(param ** 2)).cpu().data.numpy()[0]) + ', '
 
         for name, param in netG.named_parameters():
             if 'bias' not in name:
@@ -415,7 +417,7 @@ for iteration in range(ITERS):
             print('iter: ' + str(iteration) + ', ' +
                   'G_cost: ' + str(G_cost.cpu().data.numpy()[0]) + ', ' +
                   'D_cost: ' + str(D_cost.cpu().data.numpy()[0]) + ', ' +
-                  'pen: ' + str(pen.cpu().data.numpy()) + string)
+                  'pen: ' + str(pen.cpu().data.numpy()) + ' ' + string)
         samples = []
         for i in range(10):
             samples.extend(generate_samples(netG))
