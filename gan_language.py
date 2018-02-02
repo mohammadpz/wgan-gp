@@ -365,21 +365,22 @@ for iteration in range(ITERS):
         G_cost.backward(mone)
         G_cost = -G_cost
 
-    # if ('dwd' in mode):
-    #     list_weights = []
-    #     for name, param in netG.named_parameters():
-    #         if 'bias' not in name:
-    #             list_weights += [param]
+    if ('dwd' in mode):
+        list_weights = []
+        for name, param in netG.named_parameters():
+            if ('bias' not in name) and ('conv1' in name):
+                list_weights += [param]
+        assert len(list_weights) == 1
 
-    #     grads = autograd.grad(
-    #         outputs=G_cost,
-    #         inputs=list_weights,
-    #         grad_outputs=torch.ones((G_cost).size()).cuda() if use_cuda else torch.ones(
-    #             (G_cost).size()),
-    #         create_graph=True, retain_graph=True, only_inputs=True)
+        grads = autograd.grad(
+            outputs=G_cost,
+            inputs=list_weights,
+            grad_outputs=torch.ones((G_cost).size()).cuda() if use_cuda else torch.ones(
+                (G_cost).size()),
+            create_graph=True, retain_graph=True, only_inputs=True)
 
-    #     pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads]) / 3.0
-    #     pen.backward()
+        pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads]) / 2.0
+        pen.backward()
     torch.nn.utils.clip_grad_norm(netG.parameters(), 0.1)
     optimizerG.step()
 
