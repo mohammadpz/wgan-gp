@@ -388,9 +388,12 @@ for iteration in range(ITERS):
     # lib.plot.plot('/results/lang_' + mode + '/train disc cost', D_cost.cpu().data.numpy())
     # lib.plot.plot('/results/lang_' + mode + '/train gen cost', G_cost.cpu().data.numpy())
 
-    import ipdb; ipdb.set_trace()
+    if iteration % 100 == 0:
 
-    if iteration % 100 == 99:
+        string = ''
+        for name, param in netG.named_parameters():
+            string += name + ': ' + str(torch.sum(param ** 2)) + ', '
+
         for name, param in netG.named_parameters():
             if 'bias' not in name:
                 p = param.cpu().data.numpy()
@@ -412,7 +415,7 @@ for iteration in range(ITERS):
             print('iter: ' + str(iteration) + ', ' +
                   'G_cost: ' + str(G_cost.cpu().data.numpy()) + ', ' +
                   'D_cost: ' + str(D_cost.cpu().data.numpy()) + ', ' +
-                  'pen: ' + str(pen.cpu().data.numpy()))
+                  'pen: ' + str(pen.cpu().data.numpy()) + string)
         samples = []
         for i in range(10):
             samples.extend(generate_samples(netG))
