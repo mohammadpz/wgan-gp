@@ -55,6 +55,8 @@ print('B1: ' + str(B1))
 LR = float(sys.argv[5])
 print('LR: ' + str(LR))
 
+LMB = float(sys.argv[6])
+
 lib.print_model_settings(locals().copy())
 
 lines, charmap, inv_charmap = language_helpers.load_dataset(
@@ -310,8 +312,9 @@ for iteration in range(ITERS):
             # grads = autograd.grad(D_cost_real + D_cost_fake, netD.parameters())
             list_weights = []
             for name, param in netD.named_parameters():
-                if 'bias' not in name:
+                if ('bias' not in name) and ('conv1d' in name):
                     list_weights += [param]
+            assert len(list_weights) == 1
 
             grads = autograd.grad(
                 outputs=D_cost_real + D_cost_fake,
@@ -326,7 +329,7 @@ for iteration in range(ITERS):
                 g.view(g.size()[0], -1).transpose(0, 1)) ** 2) for g in grads]
 
             if '1' in mode:
-                pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads])
+                pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads]) + LMB * sum([torch.sum(p ** 2) for p in list_weights])
             if '2' in mode:
                 pen = LAMBDA * sum([n / (d ** 2 + 1e-8) for n, d in zip(noms, denoms)])
             pen.backward()
@@ -362,21 +365,21 @@ for iteration in range(ITERS):
         G_cost.backward(mone)
         G_cost = -G_cost
 
-    if ('dwd' in mode):
-        list_weights = []
-        for name, param in netG.named_parameters():
-            if 'bias' not in name:
-                list_weights += [param]
+    # if ('dwd' in mode):
+    #     list_weights = []
+    #     for name, param in netG.named_parameters():
+    #         if 'bias' not in name:
+    #             list_weights += [param]
 
-        grads = autograd.grad(
-            outputs=G_cost,
-            inputs=list_weights,
-            grad_outputs=torch.ones((G_cost).size()).cuda() if use_cuda else torch.ones(
-                (G_cost).size()),
-            create_graph=True, retain_graph=True, only_inputs=True)
+    #     grads = autograd.grad(
+    #         outputs=G_cost,
+    #         inputs=list_weights,
+    #         grad_outputs=torch.ones((G_cost).size()).cuda() if use_cuda else torch.ones(
+    #             (G_cost).size()),
+    #         create_graph=True, retain_graph=True, only_inputs=True)
 
-        pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads]) / 2.0
-        pen.backward()
+    #     pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads]) / 2.0
+    #     pen.backward()
     torch.nn.utils.clip_grad_norm(netG.parameters(), 0.1)
     optimizerG.step()
 
