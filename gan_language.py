@@ -392,7 +392,7 @@ for iteration in range(ITERS):
 
         string = ''
         for name, param in netG.named_parameters():
-            string += name + ': ' + str(torch.sum(param ** 2)) + ', '
+            string += name + ': ' + str(torch.sqrt(torch.sum(param ** 2)).cpu().data.numpy()[0]) + ', '
 
         for name, param in netG.named_parameters():
             if 'bias' not in name:
@@ -409,12 +409,12 @@ for iteration in range(ITERS):
 
         if mode == 'wgp' or mode == 'gp' or mode == 'reg':
             print('iter: ' + str(iteration) + ', ' +
-                  'G_cost: ' + str(G_cost.cpu().data.numpy()) + ', ' +
-                  'D_cost: ' + str(D_cost.cpu().data.numpy()) + ', ')
+                  'G_cost: ' + str(G_cost.cpu().data.numpy()[0]) + ', ' +
+                  'D_cost: ' + str(D_cost.cpu().data.numpy()[0]) + ', ')
         if ('dwd' in mode):
             print('iter: ' + str(iteration) + ', ' +
-                  'G_cost: ' + str(G_cost.cpu().data.numpy()) + ', ' +
-                  'D_cost: ' + str(D_cost.cpu().data.numpy()) + ', ' +
+                  'G_cost: ' + str(G_cost.cpu().data.numpy()[0]) + ', ' +
+                  'D_cost: ' + str(D_cost.cpu().data.numpy()[0]) + ', ' +
                   'pen: ' + str(pen.cpu().data.numpy()) + string)
         samples = []
         for i in range(10):
