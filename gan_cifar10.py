@@ -50,6 +50,8 @@ print('B1: ' + str(B1))
 LR = float(sys.argv[5])
 print('LR: ' + str(LR))
 
+Reg_on = str(sys.argv[6])
+
 class Generator(nn.Module):
     def __init__(self):
         super(Generator, self).__init__()
@@ -276,10 +278,10 @@ for iteration in range(ITERS):
             # grads = autograd.grad(D_cost_real + D_cost_fake, netD.parameters())
             list_weights = []
             for name, param in netD.named_parameters():
-                # if 'bias' not in name:
-                #     list_weights += [param]
-                if 'conv1d' in name:
+                if 'bias' not in name:
                     list_weights += [param]
+                # if 'conv1d' in name:
+                #     list_weights += [param]
 
             grads = autograd.grad(
                 outputs=D_cost_real + D_cost_fake,
@@ -315,6 +317,7 @@ for iteration in range(ITERS):
     fake = netG(noisev)
 
     if mode == 'reg' or mode == 'gp' or ('dwd' in mode):
+
         label.resize_(BATCH_SIZE, 1).fill_(1)
         labelv = autograd.Variable(label)
         output = netD(fake)
@@ -327,6 +330,21 @@ for iteration in range(ITERS):
         G_cost.backward(mone)
         G_cost = -G_cost
 
+    if ('dwd' in mode) and ('both' in Reg_on):
+        list_weights = []
+        for name, param in netG.named_parameters():
+            if 'bias' not in name:
+                list_weights += [param]
+
+        grads = autograd.grad(
+            outputs=G_cost,
+            inputs=list_weights,
+            grad_outputs=torch.ones((G_cost).size()).cuda() if use_cuda else torch.ones(
+                (G_cost).size()),
+            create_graph=True, retain_graph=True, only_inputs=True)
+
+        pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads]) / 2.0
+        pen.backward()
 
     # Calculate dev loss and generate samples every 100 iters
     if iteration % 100 == 99:
