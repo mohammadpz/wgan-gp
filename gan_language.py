@@ -389,7 +389,7 @@ for iteration in range(ITERS):
     # lib.plot.plot('/results/lang_' + mode + '/train gen cost', G_cost.cpu().data.numpy())
 
     if iteration % 100 == 0:
-
+        import ipdb; ipdb.set_trace()
         gradsD = autograd.grad(
             outputs=D_cost_real + D_cost_fake,
             inputs=netD.parameters(),
