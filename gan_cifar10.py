@@ -44,6 +44,11 @@ BATCH_SIZE = 64 # Batch size
 ITERS = 200000 # How many generator iterations to train for
 OUTPUT_DIM = 3072 # Number of pixels in CIFAR10 (3*32*32)
 
+B1 = float(sys.argv[4])
+print('B1: ' + str(B1))
+
+LR = float(sys.argv[5])
+print('LR: ' + str(LR))
 
 class Generator(nn.Module):
     def __init__(self):
@@ -105,8 +110,8 @@ class Discriminator(nn.Module):
 
 netG = Generator()
 netD = Discriminator()
-print(netG)
-print(netD)
+# print(netG)
+# print(netD)
 
 use_cuda = torch.cuda.is_available()
 if use_cuda:
@@ -121,8 +126,8 @@ if use_cuda:
     one = one.cuda(gpu)
     mone = mone.cuda(gpu)
 
-optimizerD = optim.Adam(netD.parameters(), lr=1e-4, betas=(0.5, 0.9))
-optimizerG = optim.Adam(netG.parameters(), lr=1e-4, betas=(0.5, 0.9))
+optimizerD = optim.Adam(netD.parameters(), lr=LR, betas=(B1, 0.9))
+optimizerG = optim.Adam(netG.parameters(), lr=LR, betas=(B1, 0.9))
 
 def calc_gradient_penalty(netD, real_data, fake_data):
     # print "real_data: ", real_data.size(), fake_data.size()
@@ -188,6 +193,23 @@ preprocess = torchvision.transforms.Compose([
                                torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
                            ])
 
+if mode != 'wgp':
+    criterion = nn.BCEWithLogitsLoss()
+    label = torch.FloatTensor(BATCH_SIZE)
+    if use_cuda:
+        criterion.cuda()
+        label = label.cuda()
+
+svds = {}
+for name, param in netG.named_parameters():
+    if 'bias' not in name:
+        svds['G.' + name] = []
+for name, param in netD.named_parameters():
+    if 'bias' not in name:
+        svds['D.' + name] = []
+
+import ipdb; ipdb.set_trace()
+
 for iteration in range(ITERS):
     start_time = time.time()
     ############################
@@ -207,13 +229,20 @@ for iteration in range(ITERS):
             real_data = real_data.cuda(gpu)
         real_data_v = autograd.Variable(real_data)
 
-        # import torchvision
-        # filename = os.path.join("test_train_data", str(iteration) + str(i) + ".jpg")
-        # torchvision.utils.save_image(real_data, filename)
+        if mode == 'reg' or mode == 'gp' or ('dwd' in mode):
+            label.resize_(BATCH_SIZE, 1).fill_(1)
+            labelv = autograd.Variable(label)
+            output = netD(real_data_v)
+            D_cost_real = criterion(output, labelv)
+            D_cost_real.backward(retain_graph=True)
+        if mode == 'wgp':
+            D_cost_real = netD(real_data_v)
+            D_cost_real = D_cost_real.mean()
+            D_cost_real.backward(mone)
 
-        D_real = netD(real_data_v)
-        D_real = D_real.mean()
-        D_real.backward(mone)
+        # D_real = netD(real_data_v)
+        # D_real = D_real.mean()
+        # D_real.backward(mone)
 
         # train with fake
         noise = torch.randn(BATCH_SIZE, 128)
@@ -222,18 +251,55 @@ for iteration in range(ITERS):
         noisev = autograd.Variable(noise, volatile=True)  # totally freeze netG
         fake = autograd.Variable(netG(noisev).data)
         inputv = fake
-        D_fake = netD(inputv)
-        D_fake = D_fake.mean()
-        D_fake.backward(one)
 
-        # train with gradient penalty
-        gradient_penalty = calc_gradient_penalty(netD, real_data_v.data, fake.data)
-        gradient_penalty.backward()
+        if mode == 'reg' or mode == 'gp' or ('dwd' in mode):
+            label.resize_(BATCH_SIZE, 1).fill_(0)
+            labelv = autograd.Variable(label)
+            output = netD(inputv)
+            D_cost_fake = criterion(output, labelv)
+            D_cost_fake.backward(retain_graph=True)
+        if mode == 'wgp':
+            D_cost_fake = netD(inputv)
+            D_cost_fake = D_cost_fake.mean()
+            D_cost_fake.backward(one)
 
-        # print "gradien_penalty: ", gradient_penalty
+        # D_fake = netD(inputv)
+        # D_fake = D_fake.mean()
+        # D_fake.backward(one)
 
-        D_cost = D_fake - D_real + gradient_penalty
-        Wasserstein_D = D_real - D_fake
+        if mode == 'wgp' or mode == 'gp':
+            # train with gradient penalty
+            gradient_penalty = calc_gradient_penalty(netD, real_data_v.data, fake.data)
+            gradient_penalty.backward()
+
+        if ('dwd' in mode):
+            # grads = autograd.grad(D_cost_real + D_cost_fake, netD.parameters())
+            list_weights = []
+            for name, param in netD.named_parameters():
+                # if 'bias' not in name:
+                #     list_weights += [param]
+                if 'conv1d' in name:
+                    list_weights += [param]
+
+            grads = autograd.grad(
+                outputs=D_cost_real + D_cost_fake,
+                inputs=list_weights,
+                grad_outputs=torch.ones((D_cost_real + D_cost_fake).size()).cuda() if use_cuda else torch.ones(
+                    (D_cost_real + D_cost_fake).size()),
+                create_graph=True, retain_graph=True, only_inputs=True)
+
+            denoms = [torch.sum(g ** 2) for g in grads]
+            noms = [torch.sum(torch.mm(
+                g.view(g.size()[0], -1),
+                g.view(g.size()[0], -1).transpose(0, 1)) ** 2) for g in grads]
+
+            if '1' in mode:
+                pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads])
+            if '2' in mode:
+                pen = LAMBDA * sum([n / (d ** 2 + 1e-8) for n, d in zip(noms, denoms)])
+            pen.backward()
+
+        D_cost = D_cost_real + D_cost_fake
         optimizerD.step()
     ############################
     # (2) Update G network
@@ -247,41 +313,53 @@ for iteration in range(ITERS):
         noise = noise.cuda(gpu)
     noisev = autograd.Variable(noise)
     fake = netG(noisev)
-    G = netD(fake)
-    G = G.mean()
-    G.backward(mone)
-    G_cost = -G
-    optimizerG.step()
 
-    # Write logs and save samples
-    lib.plot.plot('/results/cifar10/train disc cost', D_cost.cpu().data.numpy())
-    lib.plot.plot('/results/cifar10/time', time.time() - start_time)
-    lib.plot.plot('/results/cifar10/train gen cost', G_cost.cpu().data.numpy())
-    lib.plot.plot('/results/cifar10/wasserstein distance', Wasserstein_D.cpu().data.numpy())
+    if mode == 'reg' or mode == 'gp' or ('dwd' in mode):
+        label.resize_(BATCH_SIZE, 1).fill_(1)
+        labelv = autograd.Variable(label)
+        output = netD(fake)
+        G_cost = criterion(output, labelv)
+        G_cost.backward(retain_graph=True)
 
-    # Calculate inception score every 1K iters
-    # if False and iteration % 1000 == 999:
-    #     inception_score = get_inception_score(netG)
-    #     lib.plot.plot('/results/cifar10/inception score', inception_score[0])
+    if mode == 'wgp':
+        G_cost = netD(fake)
+        G_cost = G_cost.mean()
+        G_cost.backward(mone)
+        G_cost = -G_cost
+
 
     # Calculate dev loss and generate samples every 100 iters
     if iteration % 100 == 99:
-        dev_disc_costs = []
-        for images in dev_gen():
-            images = images.reshape(BATCH_SIZE, 3, 32, 32).transpose(0, 2, 3, 1)
-            imgs = torch.stack([preprocess(item) for item in images])
 
-            # imgs = preprocess(images)
-            if use_cuda:
-                imgs = imgs.cuda(gpu)
-            imgs_v = autograd.Variable(imgs, volatile=True)
+        for name, param in netG.named_parameters():
+            if 'bias' not in name:
+                p = param.cpu().data.numpy()
+                svds['G.' + name] += [np.linalg.svd(
+                    p.reshape((p.shape[0], -1)),
+                    full_matrices=False, compute_uv=False)]
+        for name, param in netD.named_parameters():
+            if 'bias' not in name:
+                p = param.cpu().data.numpy()
+                svds['D.' + name] += [np.linalg.svd(
+                    p.reshape((p.shape[0], -1)),
+                    full_matrices=False, compute_uv=False)]
 
-            D = netD(imgs_v)
-            _dev_disc_cost = -D.mean().cpu().data.numpy()
-            dev_disc_costs.append(_dev_disc_cost)
-        lib.plot.plot('/results/cifar10/dev disc cost', np.mean(dev_disc_costs))
+        if mode == 'wgp' or mode == 'gp' or mode == 'reg':
+            print('iter: ' + str(iteration) + ', ' +
+                  'G_cost: ' + str(G_cost.cpu().data.numpy()) + ', ' +
+                  'D_cost: ' + str(D_cost.cpu().data.numpy()) + ', ')
+        if ('dwd' in mode):
+            print('iter: ' + str(iteration) + ', ' +
+                  'G_cost: ' + str(G_cost.cpu().data.numpy()) + ', ' +
+                  'D_cost: ' + str(D_cost.cpu().data.numpy()) + ', ' +
+                  'pen: ' + str(pen.cpu().data.numpy()))
 
         generate_image(iteration, netG)
+
+    if iteration % 1000 == 999:
+        print('SVDS saved!')
+        np.save('/results/cifar10/svds', svds)
+        # svdplot_cifar('/results/cifar10/')
 
     # Save logs every 100 iters
     if (iteration < 5) or (iteration % 100 == 99):

@@ -12,7 +12,7 @@ def svdplot(where):
     f = np.load(path).item()
 
     dis = [
-        'D.conv1d.weight',
+        'D.linear.weight',
         'D.block.4.res_block.3.weight',
         'D.block.4.res_block.1.weight',
         'D.block.3.res_block.3.weight',
@@ -23,7 +23,7 @@ def svdplot(where):
         'D.block.1.res_block.1.weight',
         'D.block.0.res_block.3.weight',
         'D.block.0.res_block.1.weight',
-        'D.linear.weight']
+        'D.conv1d.weight']
 
     gen = [
         'G.conv1.weight',

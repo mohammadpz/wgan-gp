@@ -314,6 +314,7 @@ for iteration in range(ITERS):
                 #     list_weights += [param]
                 if 'conv1d' in name:
                     list_weights += [param]
+            assert len(list_weights) == 1
 
             grads = autograd.grad(
                 outputs=D_cost_real + D_cost_fake,
@@ -334,6 +335,8 @@ for iteration in range(ITERS):
             pen.backward()
 
         D_cost = D_cost_real + D_cost_fake
+
+        torch.nn.utils.clip_grad_norm(netD.parameters(), 0.1)
         optimizerD.step()
 
     ############################
@@ -377,7 +380,7 @@ for iteration in range(ITERS):
 
     #     pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads]) / 3.0
     #     pen.backward()
-
+    torch.nn.utils.clip_grad_norm(netG.parameters(), 0.1)
     optimizerG.step()
 
     # Write logs and save samples
