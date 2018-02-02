@@ -312,7 +312,6 @@ for iteration in range(ITERS):
             for name, param in netD.named_parameters():
                 # if 'bias' not in name:
                 #     list_weights += [param]
-                print(name)
                 if ('conv1d' in str(name)) and ('bias' not in str(name)):
                     list_weights += [param]
             assert len(list_weights) == 1
