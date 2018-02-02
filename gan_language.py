@@ -313,9 +313,8 @@ for iteration in range(ITERS):
                 # if 'bias' not in name:
                 #     list_weights += [param]
                 print(name)
-                if 'conv1d' in str(name):
+                if ('conv1d' in str(name)) and ('bias' not in str(name)):
                     list_weights += [param]
-            import ipdb; ipdb.set_trace()
             assert len(list_weights) == 1
 
             grads = autograd.grad(
