@@ -390,11 +390,25 @@ for iteration in range(ITERS):
 
     if iteration % 100 == 0:
 
+        gradsD = autograd.grad(
+            outputs=D_cost_real + D_cost_fake,
+            inputs=netD.parameters(),
+            grad_outputs=torch.ones((D_cost_real + D_cost_fake).size()).cuda() if use_cuda else torch.ones(
+                (D_cost_real + D_cost_fake).size()),
+            create_graph=True, retain_graph=True, only_inputs=True)
+
+        gradsG = autograd.grad(
+            outputs=G_cost,
+            inputs=netG.parameters(),
+            grad_outputs=torch.ones((G_cost).size()).cuda() if use_cuda else torch.ones(
+                (G_cost).size()),
+            create_graph=True, retain_graph=True, only_inputs=True)
+
         string = ''
-        for name, param in netG.named_parameters():
-            string += name + ': ' + str(torch.sqrt(torch.sum(param ** 2)).cpu().data.numpy()[0]) + ', '
-        for name, param in netD.named_parameters():
-            string += name + ': ' + str(torch.sqrt(torch.sum(param ** 2)).cpu().data.numpy()[0]) + ', '
+        for m, (name, param) in enumerate(netG.named_parameters()):
+            string += name + ': ' + str(torch.sqrt(torch.sum(gradsG[m] ** 2)).cpu().data.numpy()[0]) + ', '
+        for m, (name, param) in enumerate(netD.named_parameters()):
+            string += name + ': ' + str(torch.sqrt(torch.sum(gradsD[m] ** 2)).cpu().data.numpy()[0]) + ', '
 
         for name, param in netG.named_parameters():
             if 'bias' not in name:
