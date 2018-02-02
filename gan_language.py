@@ -332,7 +332,7 @@ for iteration in range(ITERS):
                 pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads]) + LMB * sum([torch.sum(p ** 2) for p in list_weights])
             if '2' in mode:
                 pen = LAMBDA * sum([n / (d ** 2 + 1e-8) for n, d in zip(noms, denoms)])
-            pen.backward()
+            pen.backward(retain_graph=True)
 
         D_cost = D_cost_real + D_cost_fake
 
