@@ -2,7 +2,8 @@ import collections
 import numpy as np
 import re
 
-np.random.seed(1234)
+seed = np.random.randint(10000)
+np.random.seed(seed)
 
 def tokenize_string(sample):
     return tuple(sample.lower().split(' '))
