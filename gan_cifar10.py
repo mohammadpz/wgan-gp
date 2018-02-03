@@ -183,7 +183,7 @@ def generate_image(frame, netG):
 #     return lib.inception_score.get_inception_score(list(all_samples))
 
 # Dataset iterator
-train_gen, dev_gen = lib.cifar10.load(BATCH_SIZE, data_dir=DATA_DIR)
+train_gen = lib.cifar10.load(BATCH_SIZE, data_dir=DATA_DIR)
 def inf_train_gen():
     while True:
         for images in train_gen():
