@@ -42,11 +42,9 @@ if opt.dataset == 'cifar10':
 if opt.dataset == 'imagenet':
     opt.dataroot = '/mnt/dataset3'
 
-opt.netG = '/results/' + opt.dataset + '/'
-opt.netD = '/results/' + opt.dataset + '/'
 opt.outf = '/results/' + opt.dataset + '/'
-if not os.path.exists(opt.netD):
-    os.makedirs(opt.netD)
+if not os.path.exists('/results/' + opt.dataset + '/'):
+    os.makedirs('/results/' + opt.dataset + '/')
 
 try:
     os.makedirs(opt.outf)
