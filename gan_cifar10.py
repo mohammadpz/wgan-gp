@@ -344,7 +344,7 @@ for iteration in range(ITERS):
         pen.backward()
 
     # Calculate dev loss and generate samples every 100 iters
-    if iteration % 100 == 99:
+    if iteration % 100 == 0:
 
         for name, param in netG.named_parameters():
             if 'bias' not in name:
