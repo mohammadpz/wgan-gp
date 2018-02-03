@@ -2,6 +2,8 @@ import collections
 import numpy as np
 import re
 
+np.random.seed(1234)
+
 def tokenize_string(sample):
     return tuple(sample.lower().split(' '))
 
