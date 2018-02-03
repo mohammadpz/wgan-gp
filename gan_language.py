@@ -18,7 +18,9 @@ from svd_plot import svdplot
 
 from sklearn.preprocessing import OneHotEncoder
 
-torch.manual_seed(1)
+seed = np.random.randint(10000)
+torch.cuda.manual_seed_all(seed)
+
 use_cuda = torch.cuda.is_available()
 if use_cuda:
     gpu = 0
@@ -198,6 +200,7 @@ def generate_samples(netG):
 
 netG = Generator()
 netD = Discriminator()
+import ipdb; ipdb.set_trace()
 # print(netG)
 # print(netD)
 
@@ -205,7 +208,7 @@ if use_cuda:
     netD = netD.cuda(gpu)
     netG = netG.cuda(gpu)
 
-optimizerD = optim.Adam(netD.parameters(), lr=LR / 3.0, betas=(B1, 0.9))
+optimizerD = optim.Adam(netD.parameters(), lr=LR, betas=(B1, 0.9))
 optimizerG = optim.Adam(netG.parameters(), lr=LR, betas=(B1, 0.9))
 # optimizerD = optim.SGD(netD.parameters(), lr=LR, momentum=B1)
 # optimizerG = optim.SGD(netG.parameters(), lr=LR, momentum=B1)
