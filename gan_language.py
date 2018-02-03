@@ -344,9 +344,10 @@ for iteration in range(ITERS):
         D_cost = D_cost_real + D_cost_fake
 
         torch.nn.utils.clip_grad_norm(netD.parameters(), 0.1)
+        print(torch.sum(netD.parameters().__next__().grad))
+        print(torch.sum(netD.parameters().__next__()))
+        import ipdb; ipdb.set_trace()
         optimizerD.step()
-    print(torch.sum(netD.parameters().__next__()))
-    import ipdb; ipdb.set_trace()
     ############################
     # (2) Update G network
     ###########################
