@@ -2,7 +2,8 @@ import collections
 import numpy as np
 import re
 
-seed = np.random.randint(10000)
+# seed = np.random.randint(10000)
+seed = 8973
 np.random.seed(seed)
 
 def tokenize_string(sample):
