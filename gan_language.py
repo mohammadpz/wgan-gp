@@ -205,7 +205,6 @@ def generate_samples(netG):
 netG = Generator()
 netD = Discriminator()
 print(torch.sum(netD.parameters().__next__()))
-import ipdb; ipdb.set_trace()
 # print(netG)
 # print(netD)
 
