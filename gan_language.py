@@ -201,6 +201,7 @@ def generate_samples(netG):
 
 netG = Generator()
 netD = Discriminator()
+import ipdb; ipdb.set_trace()
 # print(netG)
 # print(netD)
 
