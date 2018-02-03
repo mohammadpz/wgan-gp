@@ -118,7 +118,7 @@ class Generator(nn.Module):
         shape = output.size()
         output = output.contiguous()
         output = output.view(BATCH_SIZE*SEQ_LEN, -1)
-        output = self.softmax(output)
+        output = self.softmax(output / 3.0)
         return output.view(shape) # (BATCH_SIZE, SEQ_LEN, len(charmap))
 
 class Discriminator(nn.Module):
