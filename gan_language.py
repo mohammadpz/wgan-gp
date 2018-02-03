@@ -19,7 +19,8 @@ from svd_plot import svdplot
 from sklearn.preprocessing import OneHotEncoder
 
 seed = np.random.randint(10000)
-seed = 1234
+# seed = 1234
+print('SEED: ' + str(seed))
 torch.cuda.manual_seed_all(seed)
 
 torch.manual_seed(seed)
