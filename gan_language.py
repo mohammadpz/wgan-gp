@@ -345,7 +345,8 @@ for iteration in range(ITERS):
 
         torch.nn.utils.clip_grad_norm(netD.parameters(), 0.1)
         optimizerD.step()
-
+    print(torch.sum(netD.parameters().__next__()))
+    import ipdb; ipdb.set_trace()
     ############################
     # (2) Update G network
     ###########################
