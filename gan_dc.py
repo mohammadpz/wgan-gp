@@ -330,7 +330,7 @@ for epoch in range(opt.niter):
 
         if i % 700 == 0:
             print('SVDS saved!')
-            np.save('/results/lang_' + opt.dataset + '/svds', svds)
+            np.save('/results/' + opt.dataset + '/svds', svds)
 
 
     # do checkpointing
