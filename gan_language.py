@@ -136,7 +136,6 @@ class Discriminator(nn.Module):
             ResBlock(),
             ResBlock(),
             ResBlock(),
-            ResBlock(),
         )
         self.conv1d = nn.Conv1d(len(charmap), DIM, 1)
         self.linear = nn.Linear(SEQ_LEN*DIM, 1)
