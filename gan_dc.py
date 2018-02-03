@@ -12,6 +12,8 @@ import torchvision.datasets as dset
 import torchvision.transforms as transforms
 import torchvision.utils as vutils
 from torch.autograd import Variable
+import torch.autograd as autograd
+import numpy as np
 
 
 parser = argparse.ArgumentParser()
@@ -32,6 +34,8 @@ parser.add_argument('--netG', default='', help="path to netG (to continue traini
 parser.add_argument('--netD', default='', help="path to netD (to continue training)")
 parser.add_argument('--outf', default='.', help='folder to output images and model checkpoints')
 parser.add_argument('--manualSeed', default=1234, type=int, help='manual seed')
+parser.add_argument('--mode', default='dwd')
+parser.add_argument('--LAMBDA', type=float, default=0.0)
 
 opt = parser.parse_args()
 
@@ -216,6 +220,14 @@ fixed_noise = Variable(fixed_noise)
 optimizerD = optim.Adam(netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
 optimizerG = optim.Adam(netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
 
+svds = {}
+for name, param in netG.named_parameters():
+    if 'bias' not in name:
+        svds['G.' + name] = []
+for name, param in netD.named_parameters():
+    if 'bias' not in name:
+        svds['D.' + name] = []
+
 for epoch in range(opt.niter):
     for i, data in enumerate(dataloader, 0):
         ############################
@@ -234,7 +246,7 @@ for epoch in range(opt.niter):
 
         output = netD(inputv)
         errD_real = criterion(output, labelv)
-        errD_real.backward()
+        errD_real.backward(retain_graph=True)
         D_x = output.data.mean()
 
         # train with fake
@@ -244,9 +256,25 @@ for epoch in range(opt.niter):
         labelv = Variable(label.fill_(fake_label))
         output = netD(fake.detach())
         errD_fake = criterion(output, labelv)
-        errD_fake.backward()
+        errD_fake.backward(retain_graph=True)
         D_G_z1 = output.data.mean()
         errD = errD_real + errD_fake
+
+        if 'dwd' in opt.mode:
+            list_weights = []
+            for name, param in netD.named_parameters():
+                if 'bias' not in name:
+                    list_weights += [param]
+
+            grads = autograd.grad(
+                outputs=errD,
+                inputs=list_weights,
+                grad_outputs=torch.ones((errD).size()).cuda(),
+                create_graph=True, retain_graph=True, only_inputs=True)
+
+            pen = opt.LAMBDA * sum([torch.sum(g ** 2) for g in grads])
+            pen.backward()
+
         optimizerD.step()
 
         ############################
@@ -256,8 +284,24 @@ for epoch in range(opt.niter):
         labelv = Variable(label.fill_(real_label))  # fake labels are real for generator cost
         output = netD(fake)
         errG = criterion(output, labelv)
-        errG.backward()
+        errG.backward(retain_graph=True)
         D_G_z2 = output.data.mean()
+
+        if ('dwd' in opt.mode) and ('both' in opt.mode):
+            list_weights = []
+            for name, param in netD.named_parameters():
+                if 'bias' not in name:
+                    list_weights += [param]
+
+            grads = autograd.grad(
+                outputs=errG,
+                inputs=list_weights,
+                grad_outputs=torch.ones((errG).size()).cuda(),
+                create_graph=True, retain_graph=True, only_inputs=True)
+
+            pen = opt.LAMBDA * sum([torch.sum(g ** 2) for g in grads])
+            pen.backward()
+
         optimizerG.step()
 
         print('[%d/%d][%d/%d] Loss_D: %.4f Loss_G: %.4f D(x): %.4f D(G(z)): %.4f / %.4f'
@@ -271,6 +315,24 @@ for epoch in range(opt.niter):
             vutils.save_image(fake.data,
                     '%s/fake_samples_epoch_%03d.png' % (opt.outf, epoch),
                     normalize=True)
+
+            for name, param in netG.named_parameters():
+                if 'bias' not in name:
+                    p = param.cpu().data.numpy()
+                    svds['G.' + name] += [np.linalg.svd(
+                        p.reshape((p.shape[0], -1)),
+                        full_matrices=False, compute_uv=False)]
+            for name, param in netD.named_parameters():
+                if 'bias' not in name:
+                    p = param.cpu().data.numpy()
+                    svds['D.' + name] += [np.linalg.svd(
+                        p.reshape((p.shape[0], -1)),
+                        full_matrices=False, compute_uv=False)]
+
+        if i % 1000 == 999:
+            print('SVDS saved!')
+            np.save('/results/lang_' + opt.dataset + '/svds', svds)
+
 
     # do checkpointing
     torch.save(netG.state_dict(), '%s/netG_epoch_%d.pth' % (opt.outf, epoch))
