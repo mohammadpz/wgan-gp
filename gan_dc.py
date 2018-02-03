@@ -328,7 +328,7 @@ for epoch in range(opt.niter):
                         p.reshape((p.shape[0], -1)),
                         full_matrices=False, compute_uv=False)]
 
-        if i % 1000 == 999:
+        if i % 700 == 0:
             print('SVDS saved!')
             np.save('/results/lang_' + opt.dataset + '/svds', svds)
 
