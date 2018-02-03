@@ -191,9 +191,8 @@ def inf_train_gen():
             yield images
 gen = inf_train_gen()
 preprocess = torchvision.transforms.Compose([
-                               torchvision.transforms.ToTensor(),
-                               torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-                           ])
+    torchvision.transforms.ToTensor(),
+    torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
 if mode != 'wgp':
     criterion = nn.BCEWithLogitsLoss()
@@ -218,7 +217,6 @@ for iteration in range(ITERS):
     for p in netD.parameters():  # reset requires_grad
         p.requires_grad = True  # they are set to False below in netG update
     for i in range(CRITIC_ITERS):
-        import ipdb; ipdb.set_trace()
         _data = gen.__next__()
         netD.zero_grad()
 
