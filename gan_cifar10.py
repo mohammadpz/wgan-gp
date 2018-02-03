@@ -218,6 +218,7 @@ for iteration in range(ITERS):
     for p in netD.parameters():  # reset requires_grad
         p.requires_grad = True  # they are set to False below in netG update
     for i in range(CRITIC_ITERS):
+        import ipdb; ipdb.set_trace()
         _data = gen.__next__()
         netD.zero_grad()
 
