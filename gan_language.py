@@ -446,10 +446,10 @@ for iteration in range(ITERS):
                 s = "".join(s)
                 f.write(s + "\n")
 
-    if iteration % 1000 == 999:
-        print('SVDS saved!')
-        np.save('/results/lang_' + mode + '/svds', svds)
-        svdplot('/results/lang_' + mode + '/')
+    # if iteration % 1000 == 999:
+    #     print('SVDS saved!')
+    #     np.save('/results/lang_' + mode + '/svds', svds)
+    #     svdplot('/results/lang_' + mode + '/')
 
     if iteration % 100 == 99:
         lib.plot.flush()
