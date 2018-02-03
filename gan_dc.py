@@ -39,6 +39,9 @@ print(opt)
 if opt.dataset == 'cifar10':
     opt.dataroot = '/mnt/dataset2'
 
+if opt.dataset == 'imagenet':
+    opt.dataroot = '/mnt/dataset3'
+
 opt.netG = '/results/' + opt.dataset + '/'
 opt.netD = '/results/' + opt.dataset + '/'
 opt.outf = '/results/' + opt.dataset + '/'
