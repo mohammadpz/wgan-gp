@@ -180,7 +180,6 @@ class _netD(nn.Module):
             nn.LeakyReLU(0.2, inplace=True),
             # state size. (ndf*8) x 4 x 4
             nn.Conv2d(ndf * 8, 1, 4, 1, 0, bias=False),
-            nn.Sigmoid()
         )
 
     def forward(self, input):
@@ -198,7 +197,7 @@ if opt.netD != '':
     netD.load_state_dict(torch.load(opt.netD))
 print(netD)
 
-criterion = nn.BCELoss()
+criterion = nn.BCEWithLogitsLoss()
 
 input = torch.FloatTensor(opt.batchSize, 3, opt.imageSize, opt.imageSize)
 noise = torch.FloatTensor(opt.batchSize, nz, 1, 1)
