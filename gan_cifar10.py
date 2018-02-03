@@ -30,6 +30,7 @@ if len(DATA_DIR) == 0:
 if not os.path.exists('/results/cifar10'):
     os.makedirs('/results/cifar10')
 
+print('DATA_DIR: ' + DATA_DIR)
 # MODE = 'wgan-gp' # Valid options are dcgan, wgan, or wgan-gp
 
 mode = str(sys.argv[1])
