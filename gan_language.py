@@ -22,6 +22,9 @@ seed = np.random.randint(10000)
 seed = 1234
 torch.cuda.manual_seed_all(seed)
 
+torch.manual_seed(seed)
+torch.cuda.manual_seed(seed)
+
 use_cuda = torch.cuda.is_available()
 if use_cuda:
     gpu = 0
