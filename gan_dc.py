@@ -34,7 +34,6 @@ parser.add_argument('--outf', default='.', help='folder to output images and mod
 parser.add_argument('--manualSeed', default=1234, type=int, help='manual seed')
 
 opt = parser.parse_args()
-print(opt)
 
 if opt.dataset == 'cifar10':
     opt.dataroot = '/mnt/dataset2'
@@ -46,6 +45,7 @@ opt.outf = '/results/' + opt.dataset + '/'
 if not os.path.exists('/results/' + opt.dataset + '/'):
     os.makedirs('/results/' + opt.dataset + '/')
 
+print(opt)
 try:
     os.makedirs(opt.outf)
 except OSError:
@@ -82,7 +82,7 @@ elif opt.dataset == 'lsun':
                             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
                         ]))
 elif opt.dataset == 'cifar10':
-    dataset = dset.CIFAR10(root=opt.dataroot, download=True,
+    dataset = dset.CIFAR10(root=opt.dataroot,
                            transform=transforms.Compose([
                                transforms.Resize(opt.imageSize),
                                transforms.ToTensor(),
