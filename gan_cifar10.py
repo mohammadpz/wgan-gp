@@ -210,8 +210,6 @@ for name, param in netD.named_parameters():
     if 'bias' not in name:
         svds['D.' + name] = []
 
-import ipdb; ipdb.set_trace()
-
 for iteration in range(ITERS):
     start_time = time.time()
     ############################
