@@ -204,7 +204,6 @@ def generate_samples(netG):
 
 netG = Generator()
 netD = Discriminator()
-print(torch.sum(netD.parameters().__next__()))
 # print(netG)
 # print(netD)
 
@@ -344,58 +343,51 @@ for iteration in range(ITERS):
         D_cost = D_cost_real + D_cost_fake
 
         torch.nn.utils.clip_grad_norm(netD.parameters(), 0.1)
-        print(torch.sum(netD.parameters().__next__().grad))
-        print(torch.sum(netD.parameters().__next__()))
-        import ipdb; ipdb.set_trace()
         optimizerD.step()
     ############################
     # (2) Update G network
     ###########################
-    for p in netD.parameters():
-        p.requires_grad = False  # to avoid computation
-    netG.zero_grad()
+    for m in range(2):
+        for p in netD.parameters():
+            p.requires_grad = False  # to avoid computation
+        netG.zero_grad()
 
-    noise = torch.randn(BATCH_SIZE, 128)
-    if use_cuda:
-        noise = noise.cuda(gpu)
-    noisev = autograd.Variable(noise)
-    fake = netG(noisev)
+        noise = torch.randn(BATCH_SIZE, 128)
+        if use_cuda:
+            noise = noise.cuda(gpu)
+        noisev = autograd.Variable(noise)
+        fake = netG(noisev)
 
-    if mode == 'reg' or mode == 'gp' or ('dwd' in mode):
-        label.resize_(BATCH_SIZE, 1).fill_(1)
-        labelv = autograd.Variable(label)
-        output = netD(fake)
-        G_cost = criterion(output, labelv)
-        G_cost.backward(retain_graph=True)
+        if mode == 'reg' or mode == 'gp' or ('dwd' in mode):
+            label.resize_(BATCH_SIZE, 1).fill_(1)
+            labelv = autograd.Variable(label)
+            output = netD(fake)
+            G_cost = criterion(output, labelv)
+            G_cost.backward(retain_graph=True)
 
-    if mode == 'wgp':
-        G_cost = netD(fake)
-        G_cost = G_cost.mean()
-        G_cost.backward(mone)
-        G_cost = -G_cost
+        if mode == 'wgp':
+            G_cost = netD(fake)
+            G_cost = G_cost.mean()
+            G_cost.backward(mone)
+            G_cost = -G_cost
 
-    # if ('dwd' in mode):
-    #     list_weights = []
-    #     for name, param in netG.named_parameters():
-    #         if 'bias' not in name:
-    #             list_weights += [param]
+        # if ('dwd' in mode):
+        #     list_weights = []
+        #     for name, param in netG.named_parameters():
+        #         if 'bias' not in name:
+        #             list_weights += [param]
 
-    #     grads = autograd.grad(
-    #         outputs=G_cost,
-    #         inputs=list_weights,
-    #         grad_outputs=torch.ones((G_cost).size()).cuda() if use_cuda else torch.ones(
-    #             (G_cost).size()),
-    #         create_graph=True, retain_graph=True, only_inputs=True)
+        #     grads = autograd.grad(
+        #         outputs=G_cost,
+        #         inputs=list_weights,
+        #         grad_outputs=torch.ones((G_cost).size()).cuda() if use_cuda else torch.ones(
+        #             (G_cost).size()),
+        #         create_graph=True, retain_graph=True, only_inputs=True)
 
-    #     pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads]) / 2.0
-    #     pen.backward()
-    torch.nn.utils.clip_grad_norm(netG.parameters(), 0.1)
-    optimizerG.step()
-
-    # Write logs and save samples
-    # lib.plot.plot('/results/lang_' + mode + '/time', time.time() - start_time)
-    # lib.plot.plot('/results/lang_' + mode + '/train disc cost', D_cost.cpu().data.numpy())
-    # lib.plot.plot('/results/lang_' + mode + '/train gen cost', G_cost.cpu().data.numpy())
+        #     pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads]) / 2.0
+        #     pen.backward()
+        torch.nn.utils.clip_grad_norm(netG.parameters(), 0.1)
+        optimizerG.step()
 
     if iteration % 100 == 0:
         for p in netD.parameters():
