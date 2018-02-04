@@ -276,7 +276,7 @@ for iteration in range(ITERS):
             output = netD(real_data_v)
             D_cost_real = criterion(output, labelv)
             D_cost_real.backward(retain_graph=True)
-        if mode == 'wgp':
+        if ('wgp' in mode):
             D_cost_real = netD(real_data_v)
             D_cost_real = D_cost_real.mean()
             D_cost_real.backward(mone)
@@ -306,17 +306,17 @@ for iteration in range(ITERS):
             output = netD(inputv)
             D_cost_fake = criterion(output, labelv)
             D_cost_fake.backward(retain_graph=True)
-        if mode == 'wgp':
+        if ('wgp' in mode):
             D_cost_fake = netD(inputv)
             D_cost_fake = D_cost_fake.mean()
             D_cost_fake.backward(one)
 
-        if mode == 'wgp' or mode == 'gp':
+        if ('wgp' in mode) or mode == 'gp':
             # train with gradient penalty
             gradient_penalty = calc_gradient_penalty(netD, real_data_v.data, fake.data)
             gradient_penalty.backward()
 
-        if ('dwd' in mode):
+        if ('dw' in mode):
             # grads = autograd.grad(D_cost_real + D_cost_fake, netD.parameters())
             list_weights = []
             for name, param in netD.named_parameters():
@@ -367,7 +367,7 @@ for iteration in range(ITERS):
             G_cost = criterion(output, labelv)
             G_cost.backward(retain_graph=True)
 
-        if mode == 'wgp':
+        if ('wgp' in mode):
             G_cost = netD(fake)
             G_cost = G_cost.mean()
             G_cost.backward(mone)
@@ -430,7 +430,7 @@ for iteration in range(ITERS):
                     p.reshape((p.shape[0], -1)),
                     full_matrices=False, compute_uv=False)]
 
-        if mode == 'wgp' or mode == 'gp' or mode == 'reg':
+        if ('wgp' in mode) or mode == 'gp' or mode == 'reg':
             print('iter: ' + str(iteration) + ', ' +
                   'G_cost: ' + str(G_cost.cpu().data.numpy()[0]) + ', ' +
                   'D_cost: ' + str(D_cost.cpu().data.numpy()[0]) + ', ')
