@@ -279,7 +279,7 @@ for iteration in range(ITERS):
         if ('wgp' in mode):
             D_cost_real = netD(real_data_v)
             D_cost_real = D_cost_real.mean()
-            D_cost_real.backward(mone)
+            D_cost_real.backward(mone, retain_graph=True)
 
         # # train with real
         # D_real = netD(real_data_v)
@@ -309,12 +309,12 @@ for iteration in range(ITERS):
         if ('wgp' in mode):
             D_cost_fake = netD(inputv)
             D_cost_fake = D_cost_fake.mean()
-            D_cost_fake.backward(one)
+            D_cost_fake.backward(one, retain_graph=True)
 
         if ('wgp' in mode) or mode == 'gp':
             # train with gradient penalty
             gradient_penalty = calc_gradient_penalty(netD, real_data_v.data, fake.data)
-            gradient_penalty.backward()
+            gradient_penalty.backward(retain_graph=True)
 
         if ('dw' in mode):
             # grads = autograd.grad(D_cost_real + D_cost_fake, netD.parameters())
@@ -370,7 +370,7 @@ for iteration in range(ITERS):
         if ('wgp' in mode):
             G_cost = netD(fake)
             G_cost = G_cost.mean()
-            G_cost.backward(mone)
+            G_cost.backward(mone, retain_graph=True)
             G_cost = -G_cost
 
         # if ('dwd' in mode):
