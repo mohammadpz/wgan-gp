@@ -30,7 +30,8 @@ DATASET = '8gaussians'  # 8gaussians, 25gaussians, swissroll
 DIM = 512  # Model dimensionality
 FIXED_GENERATOR = False  # whether to hold the generator fixed at real data plus
 # Gaussian noise, as in the plots in the paper
-LAMBDA = 0.0001  # Smaller lambda seems to help for toy tasks specifically
+# LAMBDA = 0.0001  # Smaller lambda seems to help for toy tasks specifically
+LAMBDA = int(sys.argv[3])
 # CRITIC_ITERS = 5  # How many critic iterations per generator iteration
 CRITIC_ITERS = int(sys.argv[2])
 BATCH_SIZE = 256  # Batch size
