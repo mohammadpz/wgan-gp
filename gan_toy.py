@@ -266,6 +266,14 @@ if mode != 'wgp':
 if not os.path.exists('/results/' + DATASET + '_' + mode):
     os.makedirs('/results/' + DATASET + '_' + mode)
 
+svds = {}
+for name, param in netG.named_parameters():
+    if 'bias' not in name:
+        svds['G.' + name] = []
+for name, param in netD.named_parameters():
+    if 'bias' not in name:
+        svds['D.' + name] = []
+
 print('/results/' + DATASET + '_' + mode)
 for iteration in range(ITERS):
     ############################
@@ -386,11 +394,28 @@ for iteration in range(ITERS):
             G_cost = -G_cost
         optimizerG.step()
 
+    for name, param in netG.named_parameters():
+        if 'bias' not in name:
+            p = param.cpu().data.numpy()
+            svds['G.' + name] += [np.linalg.svd(
+                p.reshape((p.shape[0], -1)),
+                full_matrices=False, compute_uv=False)]
+    for name, param in netD.named_parameters():
+        if 'bias' not in name:
+            p = param.cpu().data.numpy()
+            svds['D.' + name] += [np.linalg.svd(
+                p.reshape((p.shape[0], -1)),
+                full_matrices=False, compute_uv=False)]
+
     # Write logs and save samples
     lib.plot.plot('/results/' + DATASET + '_' + mode + '/' + 'D_cost', D_cost.cpu().data.numpy())
     if not FIXED_GENERATOR:
         lib.plot.plot('/results/' + DATASET + '_' + mode + '/' + 'G_cost', G_cost.cpu().data.numpy())
-    if iteration % 100 == 99:
+    if iteration % 100 == 0:
         lib.plot.flush()
         generate_image(_data)
+
+        print('SVDS saved!')
+        np.save('/results/' + DATASET + '_' + mode + '/svds', svds)
+
     lib.plot.tick()
