@@ -336,8 +336,7 @@ for iteration in range(ITERS):
                 g.view(g.size()[0], -1),
                 g.view(g.size()[0], -1).transpose(0, 1)) ** 2) for g in grads]
 
-            if '1' in mode:
-                pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads]) + LMB * sum([torch.sum(p ** 2) for p in list_weights])
+            pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads]) + LMB * sum([torch.sum(p ** 2) for p in list_weights])
             if '2' in mode:
                 pen = LAMBDA * sum([n / (d ** 2 + 1e-8) for n, d in zip(noms, denoms)])
             pen.backward(retain_graph=True)
