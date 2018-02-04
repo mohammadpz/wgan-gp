@@ -31,7 +31,8 @@ DIM = 512  # Model dimensionality
 FIXED_GENERATOR = False  # whether to hold the generator fixed at real data plus
 # Gaussian noise, as in the plots in the paper
 LAMBDA = 0.0001  # Smaller lambda seems to help for toy tasks specifically
-CRITIC_ITERS = 5  # How many critic iterations per generator iteration
+# CRITIC_ITERS = 5  # How many critic iterations per generator iteration
+CRITIC_ITERS = int(sys.argv[2])
 BATCH_SIZE = 256  # Batch size
 ITERS = 100000  # how many generator iterations to train for
 use_cuda = True
