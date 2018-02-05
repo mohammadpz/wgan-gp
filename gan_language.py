@@ -125,10 +125,10 @@ class SNConv2d(conv._ConvNd):
 
 class SNConv1d(conv._ConvNd):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True):
-        kernel_size = (kernel_size)
-        stride = (stride)
-        padding = (padding)
-        dilation = (dilation)
+        kernel_size = (kernel_size,)
+        stride = (stride,)
+        padding = (padding,)
+        dilation = (dilation,)
         super(SNConv1d, self).__init__(
             in_channels, out_channels, kernel_size, stride, padding, dilation,
             False, (0), groups, bias)
