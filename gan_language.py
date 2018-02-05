@@ -17,6 +17,8 @@ import tflib.plot
 from svd_plot import svdplot
 
 from sklearn.preprocessing import OneHotEncoder
+from torch.nn.modules.utils import _pair
+from torch.nn.modules import conv
 
 # seed = np.random.randint(10000)
 seed = language_helpers.seed
@@ -79,6 +81,90 @@ one_hot.fit(table)
 
 # ==================Definition Start======================
 
+
+def _l2normalize(v, eps=1e-12):
+    return v / (((v**2).sum())**0.5 + eps)
+
+
+def max_singular_value(W, u=None, Ip=1):
+    """
+    power iteration for weight parameter
+    """
+    # xp = W.data
+    if u is None:
+        u = torch.FloatTensor(1, W.size(0)).normal_(0, 1).cuda()
+    _u = u
+    for _ in range(Ip):
+        # print(_u.size(), W.size())
+        _v = _l2normalize(torch.matmul(_u, W.data), eps=1e-12)
+        _u = _l2normalize(torch.matmul(_v, torch.transpose(W.data, 0, 1)), eps=1e-12)
+    sigma = torch.matmul(torch.matmul(_v, torch.transpose(W.data, 0, 1)), torch.transpose(_u, 0, 1))
+    # sigma = torch.sum(_u * torch.transpose(torch.matmul(W.data, torch.transpose(_v, 0, 1)), 0, 1), 1)
+    return sigma, _u
+
+
+class SNConv2d(conv._ConvNd):
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True):
+        kernel_size = _pair(kernel_size)
+        stride = _pair(stride)
+        padding = _pair(padding)
+        dilation = _pair(dilation)
+        super(SNConv2d, self).__init__(
+            in_channels, out_channels, kernel_size, stride, padding, dilation,
+            False, _pair(0), groups, bias)
+        self.u = None
+
+    def forward(self, input):
+        w_mat = self.weight.view(self.weight.size(0), -1)
+        sigma, _u = max_singular_value(w_mat, self.u)
+        self.u = _u
+        self.weight.data = self.weight.data / sigma
+        return F.conv2d(input, self.weight, self.bias, self.stride,
+                        self.padding, self.dilation, self.groups)
+
+
+class SNConv1d(conv._ConvNd):
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True):
+        kernel_size = _pair(kernel_size)
+        stride = _pair(stride)
+        padding = _pair(padding)
+        dilation = _pair(dilation)
+        super(SNConv1d, self).__init__(
+            in_channels, out_channels, kernel_size, stride, padding, dilation,
+            False, _pair(0), groups, bias)
+        self.u = None
+
+    def forward(self, input):
+        w_mat = self.weight.view(self.weight.size(0), -1)
+        sigma, _u = max_singular_value(w_mat, self.u)
+        self.u = _u
+        self.weight.data = self.weight.data / sigma
+        return F.conv1d(input, self.weight, self.bias, self.stride,
+                        self.padding, self.dilation, self.groups)
+
+
+class SNLinear(nn.Linear):
+    def __init__(self, in_features, out_features, bias=True):
+        super(SNLinear, self).__init__(in_features, out_features, bias)
+        self.u = None
+
+    def forward(self, input):
+        w_mat = self.weight
+        sigma, _u = max_singular_value(w_mat, self.u)
+        self.u = _u
+        self.weight.data = self.weight.data / sigma
+        return F.linear(input, self.weight, self.bias)
+
+if mode == 'sn':
+    Linear = SNLinear
+    Conv1d = SNConv1d
+    Conv2d = SNConv2d
+else:
+    Linear = nn.Linear
+    Conv1d = nn.Conv1d
+    Conv2d = nn.Conv2d
+
+
 def make_noise(shape, volatile=False):
     tensor = torch.randn(shape).cuda(gpu) if use_cuda else torch.randn(shape)
     return autograd.Variable(tensor, volatile)
@@ -90,9 +176,9 @@ class ResBlock(nn.Module):
 
         self.res_block = nn.Sequential(
             nn.ReLU(True),
-            nn.Conv1d(DIM, DIM, 5, padding=2),#nn.Linear(DIM, DIM),
+            Conv1d(DIM, DIM, 5, padding=2),#nn.Linear(DIM, DIM),
             nn.ReLU(True),
-            nn.Conv1d(DIM, DIM, 5, padding=2),#nn.Linear(DIM, DIM),
+            Conv1d(DIM, DIM, 5, padding=2),#nn.Linear(DIM, DIM),
         )
 
     def forward(self, input):
@@ -104,7 +190,7 @@ class Generator(nn.Module):
     def __init__(self):
         super(Generator, self).__init__()
 
-        self.fc1 = nn.Linear(128, DIM * SEQ_LEN)
+        self.fc1 = Linear(128, DIM * SEQ_LEN)
         self.block = nn.Sequential(
             ResBlock(),
             ResBlock(),
@@ -112,7 +198,7 @@ class Generator(nn.Module):
             ResBlock(),
             ResBlock(),
         )
-        self.conv1 = nn.Conv1d(DIM, len(charmap), 1)
+        self.conv1 = Conv1d(DIM, len(charmap), 1)
         self.softmax = nn.Softmax()
 
     def forward(self, noise):
@@ -139,8 +225,8 @@ class Discriminator(nn.Module):
             ResBlock(),
             ResBlock(),
         )
-        self.conv1d = nn.Conv1d(len(charmap), DIM, 1)
-        self.linear = nn.Linear(SEQ_LEN*DIM, 1)
+        self.conv1d = Conv1d(len(charmap), DIM, 1)
+        self.linear = Linear(SEQ_LEN*DIM, 1)
 
     def forward(self, input):
         output = input.transpose(1, 2) # (BATCH_SIZE, len(charmap), SEQ_LEN)
@@ -157,8 +243,7 @@ def inf_train_gen():
         for i in range(0, len(lines)-BATCH_SIZE+1, BATCH_SIZE):
             yield np.array(
                 [[charmap[c] for c in l] for l in lines[i:i+BATCH_SIZE]],
-                dtype='int32'
-            )
+                dtype='int32')
 
 def calc_gradient_penalty(netD, real_data, fake_data):
     alpha = torch.rand(BATCH_SIZE, 1, 1)
@@ -270,7 +355,7 @@ for iteration in range(ITERS):
         real_data_v = autograd.Variable(real_data)
 
         netD.zero_grad()
-        if mode == 'reg' or mode == 'gp' or ('dwd' in mode):
+        if mode == 'reg' or mode == 'sn' or mode == 'gp' or ('dwd' in mode):
             label.resize_(BATCH_SIZE, 1).fill_(1)
             labelv = autograd.Variable(label)
             output = netD(real_data_v)
@@ -300,7 +385,7 @@ for iteration in range(ITERS):
         # # TODO: Waiting for the bug fix from pytorch
         # D_fake.backward(one)
 
-        if mode == 'reg' or mode == 'gp' or ('dwd' in mode):
+        if mode == 'reg' or mode == 'sn' or mode == 'gp' or ('dwd' in mode):
             label.resize_(BATCH_SIZE, 1).fill_(0)
             labelv = autograd.Variable(label)
             output = netD(inputv)
@@ -359,7 +444,7 @@ for iteration in range(ITERS):
         noisev = autograd.Variable(noise)
         fake = netG(noisev)
 
-        if mode == 'reg' or mode == 'gp' or ('dwd' in mode):
+        if mode == 'reg' or mode == 'sn' or mode == 'gp' or ('dwd' in mode):
             label.resize_(BATCH_SIZE, 1).fill_(1)
             labelv = autograd.Variable(label)
             output = netD(fake)
@@ -429,7 +514,7 @@ for iteration in range(ITERS):
                     p.reshape((p.shape[0], -1)),
                     full_matrices=False, compute_uv=False)]
 
-        if ('wgp' in mode) or mode == 'gp' or mode == 'reg':
+        if ('wgp' in mode) or mode == 'gp' or mode == 'reg' or mode == 'sn':
             print('iter: ' + str(iteration) + ', ' +
                   'G_cost: ' + str(G_cost.cpu().data.numpy()[0]) + ', ' +
                   'D_cost: ' + str(D_cost.cpu().data.numpy()[0]) + ', ')
