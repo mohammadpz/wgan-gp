@@ -125,7 +125,7 @@ class SNConv2d(conv._ConvNd):
 
 class SNConv1d(conv._ConvNd):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True):
-        kernel_size = _pair(kernel_size)
+        kernel_size = kernel_size
         stride = _pair(stride)
         padding = _pair(padding)
         dilation = _pair(dilation)
