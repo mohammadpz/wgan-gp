@@ -372,14 +372,12 @@ for iteration in range(ITERS):
         real_data_v = autograd.Variable(real_data)
 
         netD.zero_grad()
-        print('HIIIIIIIII ' + mode + '.')
         if mode == 'reg' or mode == 'sn' or mode == 'gp' or ('dwd' in mode):
             label.resize_(BATCH_SIZE, 1).fill_(1)
             labelv = autograd.Variable(label)
             output = netD(real_data_v)
             D_cost_real = criterion(output, labelv)
             D_cost_real.backward(retain_graph=True)
-            print('HIIIIIIIII')
         if ('wgp' in mode):
             D_cost_real = netD(real_data_v)
             D_cost_real = D_cost_real.mean()
