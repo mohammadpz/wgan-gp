@@ -169,10 +169,26 @@ def make_noise(shape, volatile=False):
     tensor = torch.randn(shape).cuda(gpu) if use_cuda else torch.randn(shape)
     return autograd.Variable(tensor, volatile)
 
-class ResBlock(nn.Module):
+class ResBlockG(nn.Module):
 
     def __init__(self):
-        super(ResBlock, self).__init__()
+        super(ResBlockG, self).__init__()
+
+        self.res_block = nn.Sequential(
+            nn.ReLU(True),
+            nn.Conv1d(DIM, DIM, 5, padding=2),#nn.Linear(DIM, DIM),
+            nn.ReLU(True),
+            nn.Conv1d(DIM, DIM, 5, padding=2),#nn.Linear(DIM, DIM),
+        )
+
+    def forward(self, input):
+        output = self.res_block(input)
+        return input + (0.3 * output)
+
+class ResBlockD(nn.Module):
+
+    def __init__(self):
+        super(ResBlockD, self).__init__()
 
         self.res_block = nn.Sequential(
             nn.ReLU(True),
@@ -185,20 +201,21 @@ class ResBlock(nn.Module):
         output = self.res_block(input)
         return input + (0.3 * output)
 
+
 class Generator(nn.Module):
 
     def __init__(self):
         super(Generator, self).__init__()
 
-        self.fc1 = Linear(128, DIM * SEQ_LEN)
+        self.fc1 = nn.Linear(128, DIM * SEQ_LEN)
         self.block = nn.Sequential(
-            ResBlock(),
-            ResBlock(),
-            ResBlock(),
-            ResBlock(),
-            ResBlock(),
+            ResBlockG(),
+            ResBlockG(),
+            ResBlockG(),
+            ResBlockG(),
+            ResBlockG(),
         )
-        self.conv1 = Conv1d(DIM, len(charmap), 1)
+        self.conv1 = nn.Conv1d(DIM, len(charmap), 1)
         self.softmax = nn.Softmax()
 
     def forward(self, noise):
@@ -219,11 +236,11 @@ class Discriminator(nn.Module):
         super(Discriminator, self).__init__()
 
         self.block = nn.Sequential(
-            ResBlock(),
-            ResBlock(),
-            ResBlock(),
-            ResBlock(),
-            ResBlock(),
+            ResBlockD(),
+            ResBlockD(),
+            ResBlockD(),
+            ResBlockD(),
+            ResBlockD(),
         )
         self.conv1d = Conv1d(len(charmap), DIM, 1)
         self.linear = Linear(SEQ_LEN*DIM, 1)
