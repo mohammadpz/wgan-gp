@@ -119,6 +119,7 @@ class SNConv2d(conv._ConvNd):
         sigma, _u = max_singular_value(w_mat, self.u)
         self.u = _u
         # self.weight.data = self.weight.data / sigma
+        sigma = autograd.Variable(sigma)
         return F.conv2d(input, self.weight / sigma, self.bias, self.stride,
                         self.padding, self.dilation, self.groups)
 
@@ -139,6 +140,7 @@ class SNConv1d(conv._ConvNd):
         sigma, _u = max_singular_value(w_mat, self.u)
         self.u = _u
         # self.weight.data = self.weight.data / sigma
+        sigma = autograd.Variable(sigma)
         return F.conv1d(input, self.weight / sigma, self.bias, self.stride,
                         self.padding, self.dilation, self.groups)
 
@@ -153,6 +155,7 @@ class SNLinear(nn.Linear):
         sigma, _u = max_singular_value(w_mat, self.u)
         self.u = _u
         # self.weight.data = self.weight.data / sigma
+        sigma = autograd.Variable(sigma)
         return F.linear(input, self.weight / sigma, self.bias)
 
 if mode == 'sn':
