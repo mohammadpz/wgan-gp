@@ -118,8 +118,8 @@ class SNConv2d(conv._ConvNd):
         w_mat = self.weight.view(self.weight.size(0), -1)
         sigma, _u = max_singular_value(w_mat, self.u)
         self.u = _u
-        self.weight.data = self.weight.data / sigma
-        return F.conv2d(input, self.weight, self.bias, self.stride,
+        # self.weight.data = self.weight.data / sigma
+        return F.conv2d(input, self.weight / sigma, self.bias, self.stride,
                         self.padding, self.dilation, self.groups)
 
 
@@ -138,8 +138,8 @@ class SNConv1d(conv._ConvNd):
         w_mat = self.weight.view(self.weight.size(0), -1)
         sigma, _u = max_singular_value(w_mat, self.u)
         self.u = _u
-        self.weight.data = self.weight.data / sigma
-        return F.conv1d(input, self.weight, self.bias, self.stride,
+        # self.weight.data = self.weight.data / sigma
+        return F.conv1d(input, self.weight / sigma, self.bias, self.stride,
                         self.padding, self.dilation, self.groups)
 
 
@@ -152,8 +152,8 @@ class SNLinear(nn.Linear):
         w_mat = self.weight
         sigma, _u = max_singular_value(w_mat, self.u)
         self.u = _u
-        self.weight.data = self.weight.data / sigma
-        return F.linear(input, self.weight, self.bias)
+        # self.weight.data = self.weight.data / sigma
+        return F.linear(input, self.weight / sigma, self.bias)
 
 if mode == 'sn':
     Linear = SNLinear
