@@ -40,7 +40,7 @@ print('Mode: ' + mode)
 # fill in the path to the extracted files here!
 DATA_DIR = '/mnt/dataset1'
 if not os.path.exists(DATA_DIR):
-    DATA_DIR = '/workspace/data/1-billion-word-language-modeling-benchmark-r13output'
+    DATA_DIR = '/u/pezeshki/1-billion-word-language-modeling-benchmark-r13output'
 if len(DATA_DIR) == 0:
     raise Exception('Please specify path to data directory in gan_language.py!')
 
@@ -116,10 +116,10 @@ class SNConv2d(conv._ConvNd):
 
     def forward(self, input):
         w_mat = self.weight.view(self.weight.size(0), -1)
-        sigma, _u = max_singular_value(w_mat, self.u)
+        sigma, _u = max_singular_value(w_mat, autograd.Variable(self.u))
         self.u = _u
         # self.weight.data = self.weight.data / sigma
-        sigma = autograd.Variable(sigma)
+        # sigma = autograd.Variable(sigma)
         return F.conv2d(input, self.weight / sigma, self.bias, self.stride,
                         self.padding, self.dilation, self.groups)
 
@@ -137,10 +137,10 @@ class SNConv1d(conv._ConvNd):
 
     def forward(self, input):
         w_mat = self.weight.view(self.weight.size(0), -1)
-        sigma, _u = max_singular_value(w_mat, self.u)
+        sigma, _u = max_singular_value(w_mat, autograd.Variable(self.u))
         self.u = _u
         # self.weight.data = self.weight.data / sigma
-        sigma = autograd.Variable(sigma)
+        # sigma = autograd.Variable(sigma)
         return F.conv1d(input, self.weight / sigma, self.bias, self.stride,
                         self.padding, self.dilation, self.groups)
 
@@ -152,20 +152,75 @@ class SNLinear(nn.Linear):
 
     def forward(self, input):
         w_mat = self.weight
-        sigma, _u = max_singular_value(w_mat, self.u)
+        sigma, _u = max_singular_value(w_mat, autograd.Variable(self.u))
         self.u = _u
         # self.weight.data = self.weight.data / sigma
-        sigma = autograd.Variable(sigma)
+        # sigma = autograd.Variable(sigma)
         return F.linear(input, self.weight / sigma, self.bias)
 
+
+class OConv2d(conv._ConvNd):
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True):
+        kernel_size = _pair(kernel_size)
+        stride = _pair(stride)
+        padding = _pair(padding)
+        dilation = _pair(dilation)
+        super(OConv2d, self).__init__(
+            in_channels, out_channels, kernel_size, stride, padding, dilation,
+            False, _pair(0), groups, bias)
+
+    def forward(self, input):
+        ret = F.conv2d(input, self.weight, self.bias, self.stride,
+                       self.padding, self.dilation, self.groups)
+        return ret / ((ret ** 2).sum(1).sum(2).sqrt().max() + 1e-8)
+
+
+class OConv1d(conv._ConvNd):
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True):
+        kernel_size = (kernel_size,)
+        stride = (stride,)
+        padding = (padding,)
+        dilation = (dilation,)
+        super(OConv1d, self).__init__(
+            in_channels, out_channels, kernel_size, stride, padding, dilation,
+            False, (0), groups, bias)
+
+    def forward(self, input):
+        ret = F.conv1d(input, self.weight, self.bias, self.stride,
+                       self.padding, self.dilation, self.groups)
+        return ret / ((ret ** 2).sum(1).sqrt().max() + 1e-8)
+
+
+class OLinear(nn.Linear):
+    def __init__(self, in_features, out_features, bias=True):
+        super(OLinear, self).__init__(in_features, out_features, bias)
+
+    def forward(self, input):
+        ret = F.linear(input, self.weight, self.bias)
+        return ret / ((ret ** 2).sum(1).sqrt().max() + 1e-8)
+
+
 if mode == 'sn':
-    Linear = SNLinear
-    Conv1d = SNConv1d
-    Conv2d = SNConv2d
+    D_Linear = SNLinear
+    D_Conv1d = SNConv1d
+    D_Conv2d = SNConv2d
+    G_Linear = nn.Linear
+    G_Conv1d = nn.Conv1d
+    G_Conv2d = nn.Conv2d
+elif mode == 'dwd3':
+    D_Linear = OLinear
+    D_Conv1d = OConv1d
+    D_Conv2d = OConv2d
+    G_Linear = OLinear
+    G_Conv1d = OConv1d
+    G_Conv2d = OConv2d
 else:
-    Linear = nn.Linear
-    Conv1d = nn.Conv1d
-    Conv2d = nn.Conv2d
+    D_Linear = nn.Linear
+    D_Conv1d = nn.Conv1d
+    D_Conv2d = nn.Conv2d
+    G_Linear = nn.Linear
+    G_Conv1d = nn.Conv1d
+    G_Conv2d = nn.Conv2d
 
 
 def make_noise(shape, volatile=False):
@@ -179,9 +234,9 @@ class ResBlockG(nn.Module):
 
         self.res_block = nn.Sequential(
             nn.ReLU(True),
-            nn.Conv1d(DIM, DIM, 5, padding=2),#nn.Linear(DIM, DIM),
+            G_Conv1d(DIM, DIM, 5, padding=2),#nn.Linear(DIM, DIM),
             nn.ReLU(True),
-            nn.Conv1d(DIM, DIM, 5, padding=2),#nn.Linear(DIM, DIM),
+            G_Conv1d(DIM, DIM, 5, padding=2),#nn.Linear(DIM, DIM),
         )
 
     def forward(self, input):
@@ -195,9 +250,9 @@ class ResBlockD(nn.Module):
 
         self.res_block = nn.Sequential(
             nn.ReLU(True),
-            Conv1d(DIM, DIM, 5, padding=2),#nn.Linear(DIM, DIM),
+            D_Conv1d(DIM, DIM, 5, padding=2),#nn.Linear(DIM, DIM),
             nn.ReLU(True),
-            Conv1d(DIM, DIM, 5, padding=2),#nn.Linear(DIM, DIM),
+            D_Conv1d(DIM, DIM, 5, padding=2),#nn.Linear(DIM, DIM),
         )
 
     def forward(self, input):
@@ -210,7 +265,7 @@ class Generator(nn.Module):
     def __init__(self):
         super(Generator, self).__init__()
 
-        self.fc1 = nn.Linear(128, DIM * SEQ_LEN)
+        self.fc1 = G_Linear(128, DIM * SEQ_LEN)
         self.block = nn.Sequential(
             ResBlockG(),
             ResBlockG(),
@@ -218,7 +273,7 @@ class Generator(nn.Module):
             ResBlockG(),
             ResBlockG(),
         )
-        self.conv1 = nn.Conv1d(DIM, len(charmap), 1)
+        self.conv1 = G_Conv1d(DIM, len(charmap), 1)
         self.softmax = nn.Softmax()
 
     def forward(self, noise):
@@ -245,8 +300,8 @@ class Discriminator(nn.Module):
             ResBlockD(),
             ResBlockD(),
         )
-        self.conv1d = Conv1d(len(charmap), DIM, 1)
-        self.linear = Linear(SEQ_LEN*DIM, 1)
+        self.conv1d = D_Conv1d(len(charmap), DIM, 1)
+        self.linear = D_Linear(SEQ_LEN*DIM, 1)
 
     def forward(self, input):
         output = input.transpose(1, 2) # (BATCH_SIZE, len(charmap), SEQ_LEN)
@@ -440,11 +495,12 @@ for iteration in range(ITERS):
             noms = [torch.sum(torch.mm(
                 g.view(g.size()[0], -1),
                 g.view(g.size()[0], -1).transpose(0, 1)) ** 2) for g in grads]
-
-            pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads]) + LMB * sum([torch.sum(p ** 2) for p in list_weights])
+            if '1' in mode:
+                pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads]) + LMB * sum([torch.sum(p ** 2) for p in list_weights])
             if '2' in mode:
                 pen = LAMBDA * sum([n / (d ** 2 + 1e-8) for n, d in zip(noms, denoms)])
-            pen.backward(retain_graph=True)
+            if '1' in mode or '2' in mode:
+                pen.backward(retain_graph=True)
 
         D_cost = D_cost_real + D_cost_fake
 
@@ -492,7 +548,8 @@ for iteration in range(ITERS):
                 create_graph=True, retain_graph=True, only_inputs=True)
 
             pen = LAMBDA * sum([torch.sum(g ** 2) for g in grads]) / 2.0
-            pen.backward()
+            if '1' in mode:
+                pen.backward(retain_graph=True)
         torch.nn.utils.clip_grad_norm(netG.parameters(), 0.1)
         optimizerG.step()
 
