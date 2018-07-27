@@ -95,7 +95,7 @@ class Adamp(Optimizer):
 
 
 
-DATA_DIR = '/u/pezeshki/pytorch-wgan/datasets/cifar/cifar-10-batches-py'
+DATA_DIR = '/mnt/dataset1/cifar-10-batches-py'
 
 # MODE = 'wgan-gp' # dcgan, dcgan-nm, dcgan-nm-sat
 MODE = str(sys.argv[1])
@@ -109,7 +109,7 @@ BATCH_SIZE = 64
 ITERS = 200000
 OUTPUT_DIM = 3072
 
-lfile = open("inception_score_" + MODE + ".txt", "w")
+lfile = open("/results/inception_score_" + MODE + ".txt", "w")
 
 
 class Generator(nn.Module):
@@ -172,8 +172,8 @@ class Discriminator(nn.Module):
 
 netG = Generator()
 netD = Discriminator()
-print netG
-print netD
+print(netG)
+print(netD)
 
 use_cuda = torch.cuda.is_available()
 if use_cuda:
@@ -198,7 +198,7 @@ optimizerG = optim.Adam(netG.parameters(), lr=1e-4, betas=(0.5, 0.9))
 def calc_gradient_penalty(netD, real_data, fake_data):
     # print "real_data: ", real_data.size(), fake_data.size()
     alpha = torch.rand(BATCH_SIZE, 1)
-    alpha = alpha.expand(BATCH_SIZE, real_data.nelement()/BATCH_SIZE).contiguous().view(BATCH_SIZE, 3, 32, 32)
+    alpha = alpha.expand(BATCH_SIZE, int(real_data.nelement()/BATCH_SIZE)).contiguous().view(BATCH_SIZE, 3, 32, 32)
     alpha = alpha.cuda(gpu) if use_cuda else alpha
 
     interpolates = alpha * real_data + ((1 - alpha) * fake_data)
@@ -262,15 +262,15 @@ preprocess = torchvision.transforms.Compose([
 criterion = nn.BCEWithLogitsLoss()
 criterion.cuda()
 
-for iteration in xrange(ITERS):
+for iteration in range(ITERS):
     start_time = time.time()
     ############################
     # (1) Update D network
     ###########################
     for p in netD.parameters():  # reset requires_grad
         p.requires_grad = True  # they are set to False below in netG update
-    for i in xrange(CRITIC_ITERS):
-        _data = gen.next()
+    for i in range(CRITIC_ITERS):
+        _data = gen.__next__()
         netD.zero_grad()
 
         # train with real
